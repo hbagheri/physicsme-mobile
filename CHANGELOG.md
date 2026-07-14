@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.1] - 2026-07-14
+
+### 🔧 Maintenance Release
+
+#### Improved
+- Enhanced app performance and stability
+- Updated build process with latest Gradle configuration
+- Improved error handling in API calls
+- Better offline caching strategy
+
+#### Fixed
+- Minor UI rendering issues on some devices
+- Improved notification handling
+
+#### Changed
+- Updated internal dependencies
+- Optimized bundle size (still 6.6 MB)
+
+---
+
 ## [1.0.0] - 2026-06-21
 
 ### ✨ Initial Release

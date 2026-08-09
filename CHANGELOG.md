@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.3] - 2026-08-09
+
+### 🐛 Bug Fix
+
+#### Fixed
+- Install failure on devices that had v0.1.2 local build (versionCode downgrade error)
+- Bumped versionCode to 3 so Android accepts the update from physicsme.ir/downloads/
+
+---
+
 ## [0.1.1] - 2026-07-14
 
 ### 🔧 Maintenance Release

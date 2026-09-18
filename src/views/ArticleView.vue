@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, ref, watch } from 'vue';
-import { useRoute, RouterLink } from 'vue-router';
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRoute, useRouter, RouterLink } from 'vue-router';
 import type { Article } from '@shared/types';
 import { pmApi } from '@/api/client';
 import { typeset } from '@/composables/useMathJax';
@@ -13,7 +13,8 @@ const ProblemsModal = defineAsyncComponent(() => import('@/components/ProblemsMo
 const LabModal = defineAsyncComponent(() => import('@/components/LabModal.vue'));
 const CommentsModal = defineAsyncComponent(() => import('@/components/CommentsModal.vue'));
 
-const route = useRoute();
+const route  = useRoute();
+const router = useRouter();
 const slug = ref<string>(route.params.slug as string);
 
 const article = ref<Article | null>(null);
@@ -27,6 +28,33 @@ const showProblemsModal = ref(false);
 const showLabModal = ref(false);
 const showCommentsModal = ref(false);
 let loadToken = 0;                 // discards stale fetches when the user navigates fast
+
+// ── Inline AI trigger ─────────────────────────────────────────────────────────
+const aiCtx     = ref('');
+const showAiBtn = ref(false);
+
+function onSelectionChange() {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+    showAiBtn.value = false;
+    aiCtx.value = '';
+    return;
+  }
+  if (!body.value) return;
+  const range = sel.getRangeAt(0);
+  if (!body.value.contains(range.commonAncestorContainer)) {
+    showAiBtn.value = false;
+    return;
+  }
+  aiCtx.value = sel.toString().trim().substring(0, 600);
+  showAiBtn.value = true;
+}
+
+function askAI() {
+  showAiBtn.value = false;
+  window.getSelection()?.removeAllRanges();
+  router.push({ path: '/chat', query: { ctx: aiCtx.value } });
+}
 
 const bookmarks = useBookmarksStore();
 const articleCache = useArticleCacheStore();
@@ -106,7 +134,13 @@ watch(
   { flush: 'post' }
 );
 
-onMounted(load);
+onMounted(() => {
+  load();
+  document.addEventListener('selectionchange', onSelectionChange);
+});
+onUnmounted(() => {
+  document.removeEventListener('selectionchange', onSelectionChange);
+});
 watch(() => route.params.slug, (s) => { slug.value = s as string; load(); });
 </script>
 
@@ -224,6 +258,18 @@ watch(() => route.params.slug, (s) => { slug.value = s as string; load(); });
     </article>
   </main>
 
+  <!-- Inline AI trigger: appears when user selects text inside the article -->
+  <Teleport to="body">
+    <Transition name="pm-ai-btn">
+      <div v-if="showAiBtn" class="pm-ai-bubble">
+        <button @pointerdown.prevent="askAI" class="pm-ai-bubble-btn">
+          <span class="pm-ai-bubble-icon">⚛</span>
+          <span>بپرس از AI</span>
+        </button>
+      </div>
+    </Transition>
+  </Teleport>
+
   <!-- Questions Modal -->
   <QuestionsModal
     v-if="article"
@@ -334,4 +380,34 @@ mjx-container[display="true"] {
     max-width: 100%; overflow-x: auto; padding-block: 0.4em;
 }
 mjx-container { line-height: 1.6; }
+
+/* ── Inline AI bubble ─────────────────────────────────────────────────────── */
+.pm-ai-bubble {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+}
+.pm-ai-bubble-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: #1e40af;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(30,64,175,0.45);
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.pm-ai-bubble-btn:active { background: #1e3a8a; }
+.pm-ai-bubble-icon { font-size: 18px; line-height: 1; }
+.pm-ai-btn-enter-active, .pm-ai-btn-leave-active { transition: opacity 0.15s, transform 0.15s; }
+.pm-ai-btn-enter-from, .pm-ai-btn-leave-to { opacity: 0; transform: translateX(-50%) translateY(8px); }
 </style>

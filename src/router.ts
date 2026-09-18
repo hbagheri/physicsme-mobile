@@ -8,6 +8,7 @@ export const router = createRouter({
     { path: '/article/:slug',     component: () => import('./views/ArticleView.vue'),  meta: { title: 'مقاله' } },
     { path: '/bookmarks',         component: () => import('./views/BookmarksView.vue'),meta: { title: 'نشان‌شده‌ها' } },
     { path: '/settings',          component: () => import('./views/SettingsView.vue'), meta: { title: 'تنظیمات' } },
+    { path: '/chat',              component: () => import('./views/ChatView.vue'),     meta: { title: 'دستیار فیزیک' } },
     { path: '/:pathMatch(.*)*',   component: () => import('./views/NotFoundView.vue'), meta: { title: 'پیدا نشد' } },
   ],
 });

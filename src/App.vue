@@ -18,7 +18,7 @@ onMounted(() => {
 });
 
 const route = useRoute();
-const hideTabBar = computed(() => route.path.startsWith('/article/'));
+const hideTabBar = computed(() => route.path.startsWith('/article/') || route.path === '/chat');
 </script>
 
 <template>
@@ -36,6 +36,10 @@ const hideTabBar = computed(() => route.path.startsWith('/article/'));
         <span class="pm-tab-icon">★</span>
         <span class="pm-tab-label">نشان‌شده‌ها</span>
         <span v-if="bookmarks.count > 0" class="pm-tab-badge">{{ bookmarks.count }}</span>
+      </RouterLink>
+      <RouterLink to="/chat" class="pm-tab" :class="{ active: route.path === '/chat' }">
+        <span class="pm-tab-icon">⚛</span>
+        <span class="pm-tab-label">دستیار</span>
       </RouterLink>
       <RouterLink to="/settings" class="pm-tab" :class="{ active: route.path === '/settings' }">
         <span class="pm-tab-icon">⚙</span>

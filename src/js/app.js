@@ -1068,7 +1068,7 @@
     else document.documentElement.setAttribute('data-theme', v);
   }
 
-  var VERSION = '0.2.4';
+  var VERSION = '0.3.0';
 
   function showSettings() { openPage('s-settings', drawSettings); }
 

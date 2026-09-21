@@ -7,7 +7,7 @@
    cache fallback, which is the honest trade for a reading app.
    ===================================================================== */
 
-var VERSION = 'v7';
+var VERSION = 'v8';
 var SHELL = 'shell-' + VERSION;
 
 // Articles the reader chose to keep. Written by the page, never by this
@@ -24,6 +24,7 @@ var SHELL_FILES = [
   './src/styles/app.css',
   './src/styles/chat.css',
   './src/js/i18n.js',
+  './src/js/auth.js',
   './src/js/chat.js',
   './src/js/app.js',
   './vendor/fonts/fonts.css',

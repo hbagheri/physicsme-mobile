@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Debug source set overrides main/. Both apps are installed at once, so the
+     launcher label has to tell them apart, and the URL scheme must not collide
+     with the shipping app's. -->
+<resources>
+    <string name="app_name">من فیزیکی (نسخهٔ نو)</string>
+    <string name="title_activity_main">من فیزیکی (نسخهٔ نو)</string>
+    <string name="package_name">ir.physicalme.app.dev</string>
+    <string name="custom_url_scheme">ir.physicalme.app.dev</string>
+</resources>

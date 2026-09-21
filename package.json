@@ -1,0 +1,30 @@
+{
+  "name": "man-physicsi-web",
+  "version": "1.0.0",
+  "description": "PWA فارسی و RTL برای خواندن فیزیک. بدون مرحلهٔ build اجرا می‌شود.",
+  "main": "sw.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "serve": "python3 -m http.server 8788 --bind 127.0.0.1",
+    "serve:lan": "python3 -m http.server 8788 --bind 0.0.0.0",
+    "test": "node test/smoke.js && node test/pwa.js && node test/offline.js && node tools/keycheck.js",
+    "test:smoke": "node test/smoke.js",
+    "test:pwa": "node test/pwa.js",
+    "test:offline": "node test/offline.js",
+    "keycheck": "node tools/keycheck.js",
+    "sync": "tools/sync-www.sh && npx cap sync android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "playwright": "^1.63.0"
+  }
+}

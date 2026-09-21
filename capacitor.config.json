@@ -1,0 +1,10 @@
+{
+  "appId": "ir.physicalme.app",
+  "appName": "من فیزیکی",
+  "webDir": "www",
+  "backgroundColor": "#0B1026",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0B1026"
+  }
+}

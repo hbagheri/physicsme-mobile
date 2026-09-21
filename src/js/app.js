@@ -14,10 +14,7 @@
      =================================================================== */
   var CONFIG = {
     // Where the WordPress site lives. Desktop visitors go here.
-    siteUrl: 'https://physicsme.ir/',
-    // Where the content API lives. Cross-origin, so the site must send
-    // Access-Control-Allow-Origin for this app's domain.
-    apiBase: 'https://physicsme.ir/wp-json/physicsme/v1'
+    siteUrl: 'https://physicsme.ir/'
   };
 
   /* ===================================================================
@@ -72,22 +69,236 @@
 
   /* ===================================================================
      2. CONTENT SOURCE
-     Replace the bodies of these four functions with fetch() calls to the
-     WordPress REST API. The views never change — they only await these.
+     Everything the views read comes from here and nowhere else, so the
+     shape below is the whole contract. The site speaks in books,
+     chapters and articles; the app speaks in nodes. The translation
+     happens here rather than in the views, which never fetch.
      =================================================================== */
+  var API = 'https://physicsme.ir/wp-json/pm/v1';
+
+  function getJSON(path) {
+    return fetch(API + path, { headers: { Accept: 'application/json' } })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+  }
+
+  /* One fetch per list, kept for the life of the session. Navigation is
+     back-and-forth by nature, and the site's content does not move
+     while someone is reading it. */
+  var cache = {};
+  function once(key, make) {
+    if (!cache[key]) {
+      cache[key] = make().catch(function (e) { delete cache[key]; throw e; });
+    }
+    return cache[key];
+  }
+
+  function books() { return once('books', function () { return getJSON('/books'); }); }
+
+  /* ---- the offline library ----
+     Reading an article does not keep it. Someone has to ask, and the ask is
+     capped, because iOS gives a non-installed site roughly 50MB and evicts
+     the whole origin when it runs out — an unbounded library would take the
+     app shell down with it.
+
+     The body lives in a Cache Storage bucket the service worker reads on a
+     failed fetch; the index lives in localStorage so the library screen can
+     draw without unpacking every response. Two stores means they can drift,
+     so `list()` treats the index as the truth and a missing body is repaired
+     on the next download rather than reported. */
+  var SAVE_LIMIT = 20;
+  var SAVE_CACHE = 'pm-saved';
+  var SAVE_INDEX = 'pm-saved-index';
+
+  var saved = {
+    // No Cache Storage means no secure context — LAN http, typically. The
+    // feature is hidden rather than offered and then silently broken.
+    available: function () { return typeof caches !== 'undefined'; },
+
+    list: function () {
+      try { return JSON.parse(localStorage.getItem(SAVE_INDEX)) || []; }
+      catch (e) { return []; }
+    },
+
+    has: function (slug) {
+      return saved.list().some(function (a) { return a.slug === slug; });
+    },
+
+    full: function () { return saved.list().length >= SAVE_LIMIT; },
+
+    add: function (slug, title) {
+      if (!saved.available()) return Promise.reject(new Error('unavailable'));
+      if (saved.has(slug)) return Promise.resolve();
+      if (saved.full()) return Promise.reject(new Error('full'));
+      var url = API + '/articles/' + slug;
+      return fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return caches.open(SAVE_CACHE).then(function (c) { return c.put(url, r); });
+        })
+        .then(function () {
+          var l = saved.list();
+          l.unshift({ slug: slug, title: title, at: Date.now() });
+          localStorage.setItem(SAVE_INDEX, JSON.stringify(l));
+        });
+    },
+
+    remove: function (slug) {
+      var l = saved.list().filter(function (a) { return a.slug !== slug; });
+      localStorage.setItem(SAVE_INDEX, JSON.stringify(l));
+      if (!saved.available()) return Promise.resolve();
+      return caches.open(SAVE_CACHE).then(function (c) {
+        return c.delete(API + '/articles/' + slug);
+      });
+    },
+
+    clear: function () {
+      localStorage.removeItem(SAVE_INDEX);
+      if (!saved.available()) return Promise.resolve();
+      return caches.delete(SAVE_CACHE);
+    }
+  };
+
+  // The site has no "track" field: the grade books encode it in the slug
+  // and the university book matches neither. Reading the slug keeps the
+  // three top-level groups without asking the backend for a new field.
+  function track(slug) {
+    if (/-ram$/.test(slug)) return 'riazi';
+    if (/-tajrobi$/.test(slug)) return 'tajrobi';
+    return 'uni';
+  }
+
+  // The grade is in the label, but the badge is where the eye lands first, so
+  // a track screen reads as 10-11-12 at a glance. The university book has no
+  // grade and keeps its emoji.
+  var YEARS = { dahom: '10', yazdahom: '11', davazdahom: '12' };
+
+  function bookRows(which) {
+    return books().then(function (list) {
+      return list.filter(function (b) { return track(b.slug) === which; })
+        .map(function (b) {
+          var year = YEARS[b.slug.split('-')[0]];
+          return {
+            id: 'book:' + b.slug,
+            kind: 'list',
+            badge: year ? window.PMI18n.digits(year) : (b.emoji || ''),
+            title: b.label,
+            sub: T('sub.book', {
+              c: window.PMI18n.digits(b.chapterCount),
+              l: window.PMI18n.digits(b.lessonCount)
+            })
+          };
+        });
+    });
+  }
+
+  // A chapter holds three different things — its sections, then its problem
+  // set, then its flashcard deck — and the site files all three as `article`.
+  // The server tags each one with `kind`; splitting them here means the
+  // numbering counts sections only, instead of running on into the extras.
+  var KINDS = ['lesson', 'problems', 'flashcards'];
+  var KIND_BADGE = { problems: '📝', flashcards: '🃏' };
+
+  function articleRows(list) {
+    var rows = [];
+    KINDS.forEach(function (kind) {
+      var group = list.filter(function (a) { return (a.kind || 'lesson') === kind; });
+      if (!group.length) return;
+      rows.push({ group: T('group.' + kind) });
+      group.forEach(function (a, i) {
+        rows.push({
+          id: a.slug,
+          kind: 'article',
+          badge: KIND_BADGE[kind] || window.PMI18n.digits(i + 1),
+          title: a.title,
+          sub: a.readingTime || ''
+        });
+      });
+    });
+    return rows;
+  }
+
   var api = {
     nodes: function (parentId) {
-      // return fetch(CONFIG.apiBase + '/nodes?parent=' + parentId, {credentials:'include'}).then(r => r.json());
-      return Promise.resolve(FIXTURES.nodes[parentId] || []);
+      if (parentId === 'root') {
+        return Promise.resolve([
+          { id: 'school', kind: 'circles', icon: 'school', title: T('node.school') },
+          // The site has exactly one university book, so a circle screen
+          // holding a single orb would be a step that asks for a tap and
+          // gives nothing back. It opens as a list instead.
+          { id: 'uni',    kind: 'list',    icon: 'cap',    title: T('node.uni'), notice: 'copyright' },
+          { id: 'wiki',   kind: 'list',    icon: 'wiki',   title: T('node.wiki') },
+          { id: 'ai',     kind: 'chat',    icon: 'atom',   title: T('node.ai'), accent: true }
+        ]);
+      }
+      if (parentId === 'school') {
+        return Promise.resolve([
+          { id: 'riazi',   kind: 'list', icon: 'rocket', title: T('node.riazi') },
+          { id: 'tajrobi', kind: 'list', icon: 'bio',    title: T('node.tajrobi') }
+        ]);
+      }
+      if (parentId === 'riazi' || parentId === 'tajrobi') return bookRows(parentId);
+      if (parentId === 'uni') return bookRows('uni');
+
+      // The wiki circle is the site's feed: whatever went up most recently.
+      if (parentId === 'wiki') {
+        return once('recent', function () { return getJSON('/recent'); })
+          .then(function (list) {
+            return list.map(function (a) {
+              return { id: a.slug, kind: 'article', icon: 'book', title: a.title, sub: a.readingTime || '' };
+            });
+          });
+      }
+
+      if (parentId.indexOf('book:') === 0) {
+        var bslug = parentId.slice(5);
+        return once(parentId, function () {
+          return getJSON('/books/' + bslug + '/chapters');
+        }).then(function (list) {
+          return list.map(function (c, i) {
+            return {
+              id: 'ch:' + c.slug,
+              kind: 'list',
+              // `order` is book-scoped (101, 102 … for the tenth-grade books),
+              // so it is a sort key, not a chapter number to show.
+              badge: window.PMI18n.digits(i + 1),
+              title: c.title,
+              sub: T('sub.chapter', { l: window.PMI18n.digits(c.lessonCount) })
+            };
+          });
+        });
+      }
+
+      if (parentId.indexOf('ch:') === 0) {
+        var cslug = parentId.slice(3);
+        return once(parentId, function () {
+          return getJSON('/chapters/' + cslug + '/articles');
+        }).then(articleRows);
+      }
+
+      return Promise.resolve([]);
     },
-    article: function (id) {
-      // return fetch(CONFIG.apiBase + '/article/' + id, {credentials:'include'}).then(r => r.json());
-      return Promise.resolve(FIXTURES.articles[id]);
+
+    article: function (slug) {
+      return once('a:' + slug, function () {
+        return getJSON('/articles/' + slug);
+      }).then(function (a) {
+        return {
+          title: a.title,
+          meta: a.readingTime || '',
+          blocks: blocksFromHtml(a.html || '')
+        };
+      });
     },
+
     quota: function () {
-      // return fetch(CONFIG.apiBase + '/me/quota', {credentials:'include'}).then(r => r.json());
-      return Promise.resolve({ used: 8, total: 20 });
+      // No per-user quota endpoint exists yet, and there is no sign-in to
+      // attach one to. Reported as unknown rather than invented.
+      return Promise.resolve(null);
     },
+
     ask: function (payload) {
       // payload = { paragraphId, articleId, target: 'ai' | 'tutor', text }
       console.log('ask →', payload);
@@ -95,55 +306,39 @@
     }
   };
 
-  /* Fixtures mirror the shape the API must return, so the contract is
-     visible before a single line of backend exists. */
-  var FIXTURES = {
-    nodes: {
-      root: [
-        { id: 'school', kind: 'circles', icon: 'school', title: 'فیزیک دبیرستان' },
-        { id: 'uni',    kind: 'circles', icon: 'cap',    title: 'فیزیک دانشگاه', notice: 'copyright' },
-        { id: 'wiki',   kind: 'list',    icon: 'wiki',   title: 'ویکی فیزیک' },
-        { id: 'ai',     kind: 'chat',    icon: 'atom',   title: 'هوش مصنوعی', accent: true }
-      ],
-      school: [
-        { id: 'riazi',  kind: 'list', icon: 'rocket', title: 'رشتهٔ ریاضی' },
-        { id: 'tajrobi',kind: 'list', icon: 'bio',    title: 'رشتهٔ تجربی' }
-      ],
-      uni: [
-        { id: 'halliday', kind: 'list', icon: 'book', title: 'هالیدی — مبانی فیزیک' }
-      ],
-      riazi: [
-        { id: 'ch1', kind: 'list', badge: '۱', title: 'الکتریسیتهٔ ساکن', sub: '۴ بند · ۳۲ پرسش' },
-        { id: 'ch2', kind: 'list', badge: '۲', title: 'جریان الکتریکی',   sub: '۵ بند · ۴۱ پرسش' },
-        { id: 'ch3', kind: 'list', badge: '۳', title: 'مغناطیس',          sub: '۳ بند · ۲۸ پرسش' },
-        { id: 'ch4', kind: 'list', badge: '۴', title: 'القای الکترومغناطیسی', sub: '۴ بند · ۳۶ پرسش' }
-      ],
-      ch1: [
-        { group: 'محتوای فصل' },
-        { id: 'a1', kind: 'article', badge: '۱', title: 'بار الکتریکی',  sub: 'خواندن · ۶ دقیقه' },
-        { id: 'a2', kind: 'article', badge: '۲', title: 'قانون کولن',    sub: 'خواندن · ۹ دقیقه' },
-        { id: 'a3', kind: 'article', badge: '۳', title: 'میدان الکتریکی', sub: 'خواندن · ۱۱ دقیقه' },
-        { group: 'تمرین و یادسپاری' },
-        { id: 'q1', kind: 'quiz',  band: true, badge: '؟', title: 'پرسش‌ها',        sub: '۱۸ پرسش چهارگزینه‌ای' },
-        { id: 'p1', kind: 'quiz',  band: true, badge: 'Σ', title: 'مسائل',          sub: '۱۴ مسئلهٔ تشریحی' },
-        { id: 'f1', kind: 'cards', band: true, badge: '⚏', title: 'کارت‌های حافظه', sub: '۲۴ کارت' },
-        { id: 'g1', kind: 'game',  band: true, badge: '◎', title: 'بازی تطبیق',     sub: 'نمودار و کمیت' }
-      ]
-    },
-    articles: {
-      a1: {
-        title: 'بار الکتریکی',
-        meta: 'فیزیک یازدهم · فصل ۱ · بند ۱ · حدود ۶ دقیقه',
-        blocks: [
-          { type: 'p', id: 'p1', text: 'اگر میله‌ای پلاستیکی را با پارچه‌ای پشمی بمالیم، میله می‌تواند تکه‌های ریز کاغذ را به خود جذب کند. این اثر ساده که از زمان یونانیان باستان شناخته شده بود، نخستین نشانه از وجود کمیتی به نام بار الکتریکی است.' },
-          { type: 'p', id: 'p2', text: 'بار الکتریکی دو نوع دارد که آن‌ها را مثبت و منفی می‌نامیم. بارهای هم‌نام یکدیگر را می‌رانند و بارهای ناهم‌نام یکدیگر را می‌ربایند. این نام‌گذاری قراردادی است و از فرانکلین به یادگار مانده.' },
-          { type: 'formula', text: 'F = k · q₁q₂ / r²' },
-          { type: 'p', id: 'p3', text: 'نیروی میان دو بار نقطه‌ای با حاصل‌ضرب اندازهٔ بارها نسبت مستقیم و با مربع فاصلهٔ میان آن‌ها نسبت وارون دارد. ثابت کولن در خلأ برابر ۸٫۹۹ × ۱۰⁹ نیوتن‌متر مربع بر کولن مربع است.' },
-          { type: 'p', id: 'p4', text: 'توجه کن که این رابطه تنها برای بارهای نقطه‌ای یا کره‌های باردار یکنواخت اعتبار دارد. برای توزیع‌های پیوستهٔ بار باید به انتگرال‌گیری روی عنصرهای بار روی آوریم.' }
-        ]
+  /* The site returns rendered HTML; the reader wants blocks, because the
+     "؟" affordance belongs to a paragraph and nothing else. Paragraphs
+     become askable blocks, everything else — headings, lists, quotes,
+     figures, code — passes through untouched.
+
+     innerHTML is safe here in the sense that matters: the markup comes
+     from our own WordPress, the same trust boundary as the site itself.
+     If this ever reads a third-party feed, it needs sanitising first. */
+  function blocksFromHtml(html) {
+    var host = document.createElement('div');
+    host.innerHTML = html;
+
+    // An embedded video cannot play offline and costs a connection the
+    // reader may not have. The link survives; the player does not.
+    host.querySelectorAll('iframe').forEach(function (f) {
+      var a = document.createElement('p');
+      a.innerHTML = '<a href="' + (f.getAttribute('src') || '') +
+                    '" target="_blank" rel="noopener">' + T('reader.video') + '</a>';
+      f.parentNode.replaceChild(a, f);
+    });
+
+    var out = [];
+    var n = 0;
+    Array.prototype.forEach.call(host.children, function (node) {
+      if (node.tagName === 'P' && node.textContent.trim()) {
+        n++;
+        out.push({ type: 'p', id: 'p' + n, html: node.innerHTML });
+        return;
       }
-    }
-  };
+      out.push({ type: 'raw', html: node.outerHTML });
+    });
+    return out;
+  }
 
   /* ===================================================================
      3. ROUTER — a stack, because navigation here is strictly one step
@@ -180,7 +375,8 @@
   }
 
   function crumbText() {
-    return ['من فیزیکی'].concat(stack.map(function (f) { return f.title; })).join(' ← ');
+    var sep = window.PMI18n.dir === 'rtl' ? ' ← ' : ' → ';
+    return [T('app.name')].concat(stack.map(function (f) { return f.title; })).join(sep);
   }
 
   /* ---- circle grid ---- */
@@ -222,6 +418,18 @@
     el.listCrumb.textContent = crumbText();
     el.listBody.innerHTML = '';
 
+    // The copyright notice belongs to the university branch wherever it is
+    // drawn, and that branch is now a list rather than a circle screen.
+    if (frame.notice === 'copyright') {
+      var note = document.createElement('div');
+      note.className = 'banner';
+      note.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+        '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>' +
+        '<span>' + T('banner.copyright') + '</span>';
+      el.listBody.appendChild(note);
+    }
+
     items.forEach(function (item) {
       if (item.group) {
         var g = document.createElement('div');
@@ -245,6 +453,41 @@
 
   /* ---- reader ---- */
 
+  // A labelled button rather than an icon in the topbar: "this one article is
+  // now on your phone" is not something a glyph says clearly, and the cap
+  // needs somewhere to be stated when it is reached.
+  function saveButton(slug, title) {
+    var b = document.createElement('button');
+    b.className = 'savebtn';
+    b.setAttribute('data-slug', slug);
+
+    function draw(state, msg) {
+      b.classList.toggle('is-on', state === 'on');
+      b.disabled = state === 'busy';
+      b.textContent = msg;
+    }
+    function rest() {
+      draw(saved.has(slug) ? 'on' : 'off',
+           saved.has(slug) ? T('save.done') : T('save.do'));
+    }
+    rest();
+
+    b.addEventListener('click', function () {
+      if (saved.has(slug)) { saved.remove(slug).then(rest); return; }
+      if (saved.full()) {
+        draw('off', T('save.full', { n: window.PMI18n.digits(SAVE_LIMIT) }));
+        setTimeout(rest, 2600);
+        return;
+      }
+      draw('busy', T('save.busy'));
+      saved.add(slug, title).then(rest, function () {
+        draw('off', T('save.fail'));
+        setTimeout(rest, 2600);
+      });
+    });
+    return b;
+  }
+
   function renderArticle(doc, frame) {
     el.readerTitle.textContent = doc.title;
     el.readerCrumb.textContent = crumbText();
@@ -252,24 +495,28 @@
     var inner = document.createElement('div');
     inner.className = 'reader-inner';
     inner.innerHTML = '<h2>' + doc.title + '</h2><p class="reader-meta">' + doc.meta + '</p>';
+    if (saved.available()) inner.appendChild(saveButton(frame.id, doc.title));
 
-    doc.blocks.forEach(function (b, i) {
-      if (b.type === 'formula') {
-        var f = document.createElement('span');
-        f.className = 'formula';
-        f.textContent = b.text;
-        inner.appendChild(f);
+    var askable = 0;
+    doc.blocks.forEach(function (b) {
+      if (b.type === 'raw') {
+        var box = document.createElement('div');
+        box.className = 'reader-html';
+        box.innerHTML = b.html;
+        inner.appendChild(box);
         return;
       }
+      askable++;
+      var n = askable;
       var wrap = document.createElement('div');
       wrap.className = 'para';
       wrap.innerHTML =
-        '<button class="ask" aria-label="پرسش دربارهٔ این پاراگراف">؟</button>' +
-        '<p>' + b.text + '</p>';
+        '<button class="ask" aria-label="' + T('a11y.askPara') + '">؟</button>' +
+        '<p>' + b.html + '</p>';
       wrap.querySelector('.ask').addEventListener('click', function () {
         document.querySelectorAll('.para').forEach(function (p) { p.classList.remove('is-asked'); });
         wrap.classList.add('is-asked');
-        openSheet('para', { n: i + 1, articleId: frame.id, paragraphId: b.id });
+        openSheet('para', { n: n, articleId: frame.id, paragraphId: b.id });
       });
       inner.appendChild(wrap);
     });
@@ -278,9 +525,31 @@
     el.readerBody.appendChild(inner);
     el.readerBody.scrollTop = 0;
     showScreen('s-reader');
+
+    // The site writes formulas as bare \( … \) and $ … $, so nothing shows
+    // until MathJax walks the tree it has just been handed.
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([inner]).catch(function () {});
+    }
   }
 
   /* ---- navigation ---- */
+
+  /* Content now comes over the network, so every screen has a way to fail.
+     A dead screen with no explanation is worse than a wrong one. */
+  function renderFail(target, screen, retry) {
+    target.innerHTML = '';
+    var box = document.createElement('div');
+    box.className = 'loadfail';
+    box.innerHTML = '<p>' + T('err.load') + '</p>';
+    var b = document.createElement('button');
+    b.className = 'btn btn--ghost';
+    b.textContent = T('err.retry');
+    b.addEventListener('click', retry);
+    box.appendChild(b);
+    target.appendChild(box);
+    showScreen(screen);
+  }
 
   function open(item) {
     if (item.kind === 'chat') { openChat({ newChat: false }); return; }
@@ -290,6 +559,8 @@
         stack.push(item);
         api.nodes(item.id).then(function (kids) {
           renderCircles(kids, { notice: item.notice });
+        }).catch(function () {
+          renderFail(el.listBody, 's-list', function () { stack.pop(); open(item); });
         });
       });
       return;
@@ -297,18 +568,27 @@
 
     stack.push(item);
     if (item.kind === 'article') {
-      api.article(item.id).then(function (doc) { renderArticle(doc, item); });
+      api.article(item.id)
+        .then(function (doc) { renderArticle(doc, item); })
+        .catch(function () {
+          renderFail(el.readerBody, 's-reader', function () { stack.pop(); open(item); });
+        });
     } else {
-      api.nodes(item.id).then(function (kids) { renderList(kids, item); });
+      api.nodes(item.id)
+        .then(function (kids) { renderList(kids, item); })
+        .catch(function () {
+          renderFail(el.listBody, 's-list', function () { stack.pop(); open(item); });
+        });
     }
   }
 
   function back() {
     if (!stack.length) return;
-    stack.pop();
+    var leaving = stack.pop();
     var parent = stack[stack.length - 1];
 
     if (!parent) {
+      if (leaving && leaving.from === 'saved') { showSaved(); return; }
       api.nodes('root').then(function (kids) { renderCircles(kids, {}); });
       return;
     }
@@ -338,14 +618,19 @@
   function openSheet(kind, ctx) {
     pendingAsk = ctx || null;
     if (kind === 'ai') {
-      el.sheetTitle.textContent = 'دستیار من فیزیکی';
-      el.sheetSub.textContent = 'سؤالت را بپرس، یا یکی از دو مسیر زیر را انتخاب کن.';
+      el.sheetTitle.textContent = T('sheet.aiTitle');
+      el.sheetSub.textContent = T('sheet.aiSub');
     } else {
-      el.sheetTitle.textContent = 'این پاراگراف را نفهمیدم';
-      el.sheetSub.textContent = 'پاراگراف ' + ctx.n + ' انتخاب شده است.';
+      el.sheetTitle.textContent = T('sheet.paraTitle');
+      el.sheetSub.textContent = T('sheet.paraSub', { n: window.PMI18n.num(ctx.n) });
     }
     api.quota().then(function (q) {
-      el.quota.innerHTML = 'سهمیهٔ امروز: <b>' + (q.total - q.used) + ' پرسش</b> از ' + q.total + ' باقی مانده';
+      el.quota.hidden = !q;
+      if (!q) return;
+      el.quota.innerHTML = T('sheet.quota', {
+        left:  window.PMI18n.num(q.total - q.used),
+        total: window.PMI18n.num(q.total)
+      });
     });
     el.scrim.hidden = false;
     requestAnimationFrame(function () {
@@ -367,8 +652,8 @@
     closeSheet();
     openChat({
       newChat: true,
-      draft: 'این پاراگراف را نفهمیدم، ساده‌تر توضیح بده.',
-      cite: 'پاراگراف ' + (ctx.n || '')
+      draft: T('sheet.draftAsk'),
+      cite: T('sheet.citePara', { n: window.PMI18n.num(ctx.n || 0) })
     });
   });
   $('#opt-tutor').addEventListener('click', function () {
@@ -387,6 +672,390 @@
   }
   var lastScreen = 's-orbs';
   window.PMChat.onClose(function () { showScreen(lastScreen); });
+
+  /* ===================================================================
+     4.5 ACCOUNT FAMILY — auth · account · usage · settings
+     These four screens are not part of the content stack. A chapter is
+     something you are reading; the account is somewhere you stepped away
+     to. So they push onto their own stack and one back press returns you
+     to whatever screen opened them.
+     =================================================================== */
+  var pageStack = [];
+
+  function openPage(id, render) {
+    var on = document.querySelector('.screen.is-on');
+    if (on) pageStack.push(on.id);
+    if (render) render();
+    showScreen(id);
+  }
+  function pageBack() { showScreen(pageStack.pop() || 's-orbs'); }
+  document.querySelectorAll('[data-page-back]').forEach(function (b) {
+    b.addEventListener('click', pageBack);
+  });
+
+  /* ---- account data layer ----
+     Same contract as `api` above: the views never touch storage directly,
+     so swapping localStorage for the REST endpoints is a change here only. */
+  var account = {
+    me: function () {
+      try { return JSON.parse(localStorage.getItem('pm-user') || 'null'); }
+      catch (e) { return null; }
+    },
+    save: function (u) {
+      try { localStorage.setItem('pm-user', JSON.stringify(u)); } catch (e) {}
+      return Promise.resolve(u);
+    },
+    logout: function () {
+      try { localStorage.removeItem('pm-user'); } catch (e) {}
+      return Promise.resolve();
+    },
+    // App Store rules require this to really delete, not hide. The endpoint
+    // does not exist yet — see NOTES.md.
+    destroy: function () { return account.logout(); },
+    usage: function () {
+      return Promise.resolve({
+        used: 12400, limit: 20000, remaining: 7600,
+        days: [
+          { label: 'day.sat', tokens: 1200 },
+          { label: 'day.sun', tokens: 2400 },
+          { label: 'day.mon', tokens: 800 },
+          { label: 'day.tue', tokens: 3100 },
+          { label: 'day.wed', tokens: 1900 },
+          { label: 'day.thu', tokens: 2600 },
+          { label: 'day.fri', tokens: 400 }
+        ]
+      });
+    }
+  };
+
+  function prow(t1, t2, cls) {
+    return '<button class="prow' + (cls ? ' ' + cls : '') + '">' +
+             '<span class="prow-text"><span class="prow-t1">' + t1 + '</span>' +
+             (t2 ? '<span class="prow-t2">' + t2 + '</span>' : '') + '</span>' +
+             '<span class="prow-chev">' + ICONS.chev + '</span>' +
+           '</button>';
+  }
+
+  /* ---- auth — Telegram only ---- */
+
+  function renderAuth(state, payload) {
+    var box = $('#auth-state');
+    if (state === 'waiting') {
+      box.innerHTML =
+        '<div class="waiting"><i></i>' +
+          '<p class="t-body">' + T('auth.waitBody') + '</p></div>' +
+        '<div class="code">' + T('auth.code', { code: payload }) + '</div>' +
+        '<button class="btn" id="auth-open">' + T('auth.openTelegram') + '</button>' +
+        '<button class="btn btn--ghost" id="auth-again">' + T('auth.resend') + '</button>' +
+        '<button class="btn btn--ghost" id="auth-cancel">' + T('auth.cancel') + '</button>';
+      $('#auth-again').addEventListener('click', startAuth);
+      $('#auth-cancel').addEventListener('click', function () { renderAuth('start'); });
+      return;
+    }
+    if (state === 'error') {
+      box.innerHTML =
+        '<div class="card"><h4>' + T('auth.errTitle') + '</h4>' +
+          '<p class="t-small">' + T('auth.errBody') + '</p></div>' +
+        '<button class="btn" id="auth-start">' + T('auth.retry') + '</button>';
+      $('#auth-start').addEventListener('click', startAuth);
+      return;
+    }
+    // The hero above already carries auth.h / auth.why — the start state is
+    // only the button, so the reason is not stated twice.
+    box.innerHTML = '<button class="btn" id="auth-start">' + T('auth.start') + '</button>';
+    $('#auth-start').addEventListener('click', startAuth);
+  }
+
+  var authTimer = null;
+  function startAuth() {
+    var code = String(Math.floor(100000 + Math.random() * 900000));
+    renderAuth('waiting', window.PMI18n.digits(code));
+    clearTimeout(authTimer);
+    // Mock: the real flow polls until the bot reports the code was used.
+    authTimer = setTimeout(function () {
+      account.save({ name: T('account.guest'), telegram: '@physicsme' })
+        .then(function () { showAccount(); });
+    }, 2600);
+  }
+
+  /* ---- account ---- */
+
+  function showAccount() { openPage('s-account', function () { drawAccount(account.me()); }); }
+
+  function drawAccount(u) {
+    var box = $('#account-body');
+    if (!u) {
+      box.innerHTML =
+        '<div class="card"><h4>' + T('account.guest') + '</h4>' +
+          '<p class="t-small">' + T('account.signIn') + '</p>' +
+          '<button class="btn" id="acc-login">' + T('auth.start') + '</button></div>' +
+        // The library belongs to the phone, not to an account, and there is
+        // no sign-in yet — putting it only in the signed-in branch would
+        // make it unreachable for everyone.
+        prow(T('saved.title'), T('saved.sub'));
+      $('#acc-login').addEventListener('click', function () {
+        openPage('s-auth', function () { renderAuth('start'); });
+      });
+      box.querySelector('.prow').addEventListener('click', showSaved);
+      return;
+    }
+
+    box.innerHTML =
+      '<div class="who">' +
+        '<span class="avatar">' + (u.name || '؟').slice(0, 1) + '</span>' +
+        '<span class="who-t1">' + (u.name || '') + '</span>' +
+        '<span class="who-t2">' + (u.telegram || '') + '</span>' +
+      '</div>' +
+      '<label class="field"><span>' + T('account.name') + '</span>' +
+        '<input id="acc-name" placeholder="' + T('account.namePh') + '" value="' + (u.name || '') + '"></label>' +
+      '<button class="btn" id="acc-save">' + T('account.save') + '</button>' +
+      prow(T('account.usage'), T('account.usageSub')) +
+      prow(T('account.settings'), T('account.settingsSub')) +
+      prow(T('saved.title'), T('saved.sub')) +
+      '<button class="btn btn--ghost" id="acc-out">' + T('account.logout') + '</button>' +
+      prow(T('account.delete'), T('account.deleteSub'), 'prow--danger') +
+      '<div class="confirm" id="acc-confirm" hidden>' +
+        '<h5>' + T('account.deleteAsk') + '</h5>' +
+        '<p>' + T('account.deleteBody') + '</p>' +
+        '<div class="row2">' +
+          '<button class="yes">' + T('account.deleteYes') + '</button>' +
+          '<button class="no">' + T('account.deleteNo') + '</button>' +
+        '</div>' +
+      '</div>';
+
+    var rows = box.querySelectorAll('.prow');
+    $('#acc-save').addEventListener('click', function (e) {
+      u.name = $('#acc-name').value.trim() || u.name;
+      account.save(u).then(function () { e.target.textContent = T('account.saved'); });
+    });
+    rows[0].addEventListener('click', showUsage);
+    rows[1].addEventListener('click', showSettings);
+    rows[2].addEventListener('click', showSaved);
+    $('#acc-out').addEventListener('click', function () {
+      account.logout().then(function () { drawAccount(null); });
+    });
+    rows[3].addEventListener('click', function () { $('#acc-confirm').hidden = false; });
+    $('#acc-confirm').querySelector('.no').addEventListener('click', function () {
+      $('#acc-confirm').hidden = true;
+    });
+    $('#acc-confirm').querySelector('.yes').addEventListener('click', function () {
+      account.destroy().then(function () { drawAccount(null); });
+    });
+  }
+
+  /* ---- offline library ---- */
+
+  function showSaved() { openPage('s-saved', drawSaved); }
+
+  function drawSaved() {
+    var box = $('#saved-body');
+    var list = saved.list();
+
+    if (!list.length) {
+      box.innerHTML = '<div class="card"><h4>' + T('saved.emptyTitle') + '</h4>' +
+        '<p class="t-small">' + T('saved.emptyBody') + '</p></div>';
+      return;
+    }
+
+    box.innerHTML =
+      '<p class="note">' + T('saved.count', {
+        n: window.PMI18n.digits(list.length),
+        max: window.PMI18n.digits(SAVE_LIMIT)
+      }) + '</p>' +
+      list.map(function (a) {
+        return '<div class="srow">' +
+                 '<button class="srow-open">' + a.title + '</button>' +
+                 '<button class="srow-del" aria-label="' + T('saved.remove') + '">✕</button>' +
+               '</div>';
+      }).join('') +
+      '<button class="btn btn--ghost" id="saved-clear">' + T('saved.clearAll') + '</button>';
+
+    box.querySelectorAll('.srow').forEach(function (row, i) {
+      var a = list[i];
+      row.querySelector('.srow-open').addEventListener('click', function () {
+        // The library is not a node in the content tree — offline there is
+        // no tree to be in — so the article opens as a root and carries a
+        // note saying where it came from, which is what Back reads.
+        stack.length = 0;
+        open({ id: a.slug, kind: 'article', title: a.title, from: 'saved' });
+      });
+      row.querySelector('.srow-del').addEventListener('click', function () {
+        saved.remove(a.slug).then(drawSaved);
+      });
+    });
+    $('#saved-clear').addEventListener('click', function () {
+      saved.clear().then(drawSaved);
+    });
+  }
+
+  /* ---- usage ---- */
+
+  function showUsage() {
+    openPage('s-usage', function () {
+      account.usage().then(function (q) {
+        var over = q.remaining < 0;
+        var peak = Math.max.apply(null, q.days.map(function (d) { return d.tokens; })) || 1;
+        var cap = q.limit / 7;
+
+        $('#usage-body').innerHTML =
+          '<div class="stats">' +
+            '<div class="stat"><b>' + window.PMI18n.num(q.used) + '</b><span>' + T('usage.used') + '</span></div>' +
+            '<div class="stat"><b>' + window.PMI18n.num(q.limit) + '</b><span>' + T('usage.limit') + '</span></div>' +
+            '<div class="stat' + (over ? ' stat--debt' : '') + '"><b>' +
+              window.PMI18n.num(q.remaining) + '</b><span>' + T('usage.remaining') + '</span></div>' +
+          '</div>' +
+          '<div class="card"><h4>' + T('usage.week') + '</h4><div class="bars">' +
+            q.days.map(function (d) {
+              return '<div class="bar' + (d.tokens > cap ? ' over' : '') + '">' +
+                       '<i style="height:' + Math.round(d.tokens / peak * 100) + '%"></i>' +
+                       '<u>' + T(d.label) + '</u></div>';
+            }).join('') +
+          '</div></div>' +
+          (over ? '<p class="note">' + T('usage.debtNote') + '</p>' : '');
+      });
+    });
+  }
+
+  /* ---- settings ---- */
+
+  var THEMES = [
+    { v: 'light',  k: 'settings.themeLight' },
+    { v: 'dark',   k: 'settings.themeDark'  },
+    { v: 'system', k: 'settings.themeAuto'  }
+  ];
+
+  function theme() {
+    try { return localStorage.getItem('pm-theme') || 'system'; } catch (e) { return 'system'; }
+  }
+  function setTheme(v) {
+    try { localStorage.setItem('pm-theme', v); } catch (e) {}
+    applyTheme();
+  }
+  // "system" means: remove the attribute and let the prefers-color-scheme
+  // media query in tokens.css decide. Anything else pins it.
+  function applyTheme() {
+    var v = theme();
+    if (v === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', v);
+  }
+
+  var VERSION = '0.2.4';
+
+  function showSettings() { openPage('s-settings', drawSettings); }
+
+  function drawSettings() {
+    $('#settings-body').innerHTML =
+      '<div class="card"><h4>' + T('settings.language') + '</h4>' +
+        '<div class="seg" id="set-lang">' +
+          '<button data-v="fa">فارسی</button>' +
+          '<button data-v="en">English</button>' +
+        '</div></div>' +
+      '<div class="card"><h4>' + T('settings.theme') + '</h4>' +
+        '<div class="seg" id="set-theme">' +
+          THEMES.map(function (o) {
+            return '<button data-v="' + o.v + '">' + T(o.k) + '</button>';
+          }).join('') +
+        '</div></div>' +
+      '<div class="card"><h4>' + T('settings.pyCache') + '</h4>' +
+        '<p class="t-small">' + T('settings.pyCacheSub') + '</p>' +
+        '<button class="btn btn--ghost" id="set-clear">' + T('settings.clear') + '</button></div>' +
+      '<p class="note">' + T('settings.version', { v: window.PMI18n.digits(VERSION) }) + '</p>';
+
+    function seg(id, current, onPick) {
+      var box = $(id);
+      box.querySelectorAll('button').forEach(function (b) {
+        b.classList.toggle('on', b.getAttribute('data-v') === current);
+        b.addEventListener('click', function () { onPick(b.getAttribute('data-v')); });
+      });
+    }
+    seg('#set-lang', window.PMI18n.lang, function (v) {
+      window.PMI18n.set(v);
+      drawSettings();
+      refreshContent();
+    });
+    seg('#set-theme', theme(), function (v) { setTheme(v); drawSettings(); });
+
+    $('#set-clear').addEventListener('click', function (e) {
+      window.PMChat.resetPython().then(function () {
+        e.target.textContent = T('settings.cleared');
+      });
+    });
+  }
+
+  // A language switch rewrites static markup, but anything JS painted has to
+  // be painted again. renderCircles navigates as well as paints, so the
+  // active screen is restored afterwards — the switch happens in Settings and
+  // must not throw you back to the home circles.
+  function refreshContent() {
+    var here = document.querySelector('.screen.is-on');
+    var u = account.me();
+    if (document.querySelector('#account-body').children.length) drawAccount(u);
+    var parent = stack.length ? stack[stack.length - 1] : null;
+    if (parent && parent.kind === 'article') {
+      api.article(parent.id).then(function (doc) {
+        renderArticle(doc, parent);
+        if (here) showScreen(here.id);
+      });
+      return;
+    }
+    var circles = !parent || parent.kind === 'circles';
+    api.nodes(parent ? parent.id : 'root').then(function (kids) {
+      if (circles) renderCircles(kids, { notice: parent && parent.notice });
+      else renderList(kids, parent);
+      if (here) showScreen(here.id);
+    });
+  }
+
+  $('#orb-account').addEventListener('click', showAccount);
+
+  /* ===================================================================
+     4.6 ONBOARDING
+     Three cards, once. Not a tour of the UI — a statement of what the app
+     is for, which is the only thing a first-time visitor cannot guess.
+     =================================================================== */
+  (function onboarding() {
+    var seen = false;
+    try { seen = localStorage.getItem('pm-onboarded') === '1'; } catch (e) {}
+    if (seen) return;
+
+    var box = $('#onboard');
+    var track = $('#onb-track');
+    var dots = $('#onb-dots');
+    var next = $('#onb-next');
+    var pages = [
+      { icon: ICONS.book,   k: '1' },
+      { icon: ICONS.wiki,   k: '2' },
+      { icon: ICONS.rocket, k: '3' }
+    ];
+    var at = 0;
+
+    track.innerHTML = pages.map(function (p) {
+      return '<div class="onb-page"><span class="hero-ico">' + p.icon + '</span>' +
+               '<h2 class="t-h1">' + T('onb.' + p.k + 't') + '</h2>' +
+               '<p class="t-body">' + T('onb.' + p.k + 'b') + '</p></div>';
+    }).join('');
+    dots.innerHTML = pages.map(function () { return '<i></i>'; }).join('');
+
+    function draw() {
+      track.style.transform = 'translateX(' +
+        (window.PMI18n.dir === 'rtl' ? at * 100 : at * -100) + '%)';
+      dots.querySelectorAll('i').forEach(function (d, i) { d.classList.toggle('on', i === at); });
+      next.textContent = T(at === pages.length - 1 ? 'onb.start' : 'onb.next');
+    }
+    function done() {
+      box.hidden = true;
+      try { localStorage.setItem('pm-onboarded', '1'); } catch (e) {}
+    }
+
+    next.addEventListener('click', function () {
+      if (at === pages.length - 1) return done();
+      at++; draw();
+    });
+    $('#onb-skip').addEventListener('click', done);
+
+    box.hidden = false;
+    draw();
+  })();
 
   /* ===================================================================
      5. iOS install tip
@@ -411,6 +1080,60 @@
   })();
 
   /* ===================================================================
+     5.1 Update check
+     The APK is side-loaded from the site, not Google Play, so nothing
+     updates it on its own. The web build is excluded: its service
+     worker already replaces itself, and there is no APK to offer.
+     =================================================================== */
+  (function updateCheck() {
+    var native = !!(window.Capacitor && window.Capacitor.isNativePlatform &&
+                    window.Capacitor.isNativePlatform());
+    if (!native) return;
+
+    var DAY = 86400000;
+    var last = 0;
+    try { last = parseInt(localStorage.getItem('update-checked') || '0', 10) || 0; } catch (e) {}
+    if (Date.now() - last < DAY) return;
+
+    // Pads the shorter side so "0.2" loses to "0.2.1" instead of tying.
+    function newer(a, b) {
+      var x = String(a).split('.'), y = String(b).split('.');
+      for (var i = 0; i < Math.max(x.length, y.length); i++) {
+        var d = (parseInt(x[i], 10) || 0) - (parseInt(y[i], 10) || 0);
+        if (d) return d > 0;
+      }
+      return false;
+    }
+
+    fetch('https://physicsme.ir/wp-json/pm/v1/app-version', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (info) {
+        try { localStorage.setItem('update-checked', String(Date.now())); } catch (e) {}
+        if (!info || !info.latest || !info.apk_url) return;
+        if (!newer(info.latest, VERSION)) return;
+
+        var skipped = '';
+        try { skipped = localStorage.getItem('update-skipped') || ''; } catch (e) {}
+        if (skipped === info.latest) return;
+
+        var tip = $('#update-tip');
+        $('#update-tip-text').textContent =
+          T('update.available', { v: window.PMI18n.digits(info.latest) });
+        var link = $('#update-tip-link');
+        link.textContent = T('update.get');
+        link.href = info.apk_url;
+        tip.hidden = false;
+
+        $('#update-tip-close').addEventListener('click', function () {
+          tip.hidden = true;
+          // Silence this version only — the next one asks again.
+          try { localStorage.setItem('update-skipped', info.latest); } catch (e) {}
+        });
+      })
+      .catch(function () {});
+  })();
+
+  /* ===================================================================
      6. Service worker
      =================================================================== */
   if ('serviceWorker' in navigator) {
@@ -420,6 +1143,8 @@
   }
 
   /* ---- boot ---- */
+  applyTheme();
+  window.PMI18n.apply();
   window.PMChat.init();
   api.nodes('root').then(function (kids) { renderCircles(kids, {}); });
 })();

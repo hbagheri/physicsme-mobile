@@ -2,25 +2,30 @@
    من فیزیکی — chat module
    ---------------------------------------------------------------------
    Exposes window.PMChat.open(opts). Everything that touches the network
-   lives in `api` at the top; the views never fetch. Set MOCK = false once
-   token auth exists (see docs/api-contract.md — cookie+nonce does not
-   work from a packaged app).
+   lives in `api` at the top; the views never fetch.
+
+   The app has no sign-in yet. POST /chat answers anonymous callers, so the
+   conversation works; everything that belongs to an account — history,
+   rename, hide, rate — does not, and is skipped rather than fired at the
+   server to collect a 401. See docs/api-contract.md.
    ===================================================================== */
 
 window.PMChat = (function () {
   'use strict';
 
-  var MOCK = true;                       // flip to false when auth is ready
   var BASE = 'https://physicsme.ir/wp-json/physicalme/v1';
 
   /* ===================================================================
      1. API — shapes taken verbatim from the plugin (REPORT.md §1.3)
      =================================================================== */
 
+  function token() {
+    try { return localStorage.getItem('pm-auth'); } catch (e) { return null; }
+  }
+
   function authHeaders() {
     var h = { 'Content-Type': 'application/json' };
-    var t = null;
-    try { t = localStorage.getItem('pm-auth'); } catch (e) {}
+    var t = token();
     if (t) h['Authorization'] = 'Basic ' + t;   // WP Application Passwords
     return h;
   }
@@ -28,38 +33,42 @@ window.PMChat = (function () {
   var api = {
     // GET /chat/sessions → [{id,title,date,tokens}] — max 60, no paging yet
     sessions: function () {
-      if (MOCK) return Promise.resolve(FIXTURES.sessions.slice());
-      return fetch(BASE + '/chat/sessions', { headers: authHeaders() }).then(r => r.json());
+      if (!token()) return Promise.resolve([]);
+      return fetch(BASE + '/chat/sessions', { headers: authHeaders() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .catch(function () { return []; });
     },
 
     // GET /chat/sessions/{id} → [{role,message}]  ⚠ no log_id, so rating is
     // dead on a reloaded conversation until the backend adds it
     session: function (id) {
-      if (MOCK) return Promise.resolve(FIXTURES.messages[id] || []);
-      return fetch(BASE + '/chat/sessions/' + id, { headers: authHeaders() }).then(r => r.json());
+      if (!token()) return Promise.resolve([]);
+      return fetch(BASE + '/chat/sessions/' + id, { headers: authHeaders() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .catch(function () { return []; });
     },
 
     rename: function (id, title) {
-      if (MOCK) return Promise.resolve({ ok: true, title: title });
+      if (!token()) return Promise.resolve({ ok: true, title: title });
       return fetch(BASE + '/chat/sessions/' + id + '/rename', {
         method: 'POST', headers: authHeaders(), body: JSON.stringify({ title: title })
-      }).then(r => r.json());
+      }).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
     },
 
     // soft delete: sets wp_pm_chat_sessions.is_hidden = 1. Messages stay.
     hide: function (id) {
-      if (MOCK) return Promise.resolve({ ok: true });
+      if (!token()) return Promise.resolve({ ok: true });
       return fetch(BASE + '/chat/sessions/' + id + '/hide', {
         method: 'POST', headers: authHeaders(), body: '{}'
-      }).then(r => r.json());
+      }).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
     },
 
     rate: function (logId, rating, sessionId) {
-      if (MOCK) return Promise.resolve({ ok: true });
+      if (!token()) return Promise.resolve({ ok: true });
       return fetch(BASE + '/chat/rate', {
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({ log_id: logId, rating: rating, session_id: sessionId })
-      }).then(r => r.json());
+      }).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
     },
 
     /* POST /chat — SSE over fetch, NOT EventSource.
@@ -67,14 +76,12 @@ window.PMChat = (function () {
        the site reads the body by hand. Same approach here.
        handlers: { status, token, source, translation, done, error } */
     stream: function (payload, handlers, signal) {
-      if (MOCK) return mockStream(payload, handlers, signal);
-
       return fetch(BASE + '/chat', {
         method: 'POST', headers: authHeaders(), body: JSON.stringify(payload), signal: signal
       }).then(function (res) {
         if (!res.ok) {
           return res.json().then(function (j) {
-            var msg = (j && j.data && j.data.message) || (j && j.message) || 'خطای ناشناخte';
+            var msg = (j && j.data && j.data.message) || (j && j.message) || T('err.unknown');
             handlers.error({ status: res.status, message: msg, code: j && j.data && j.data.code });
           });
         }
@@ -105,7 +112,7 @@ window.PMChat = (function () {
         return pump();
       }).catch(function (err) {
         if (err.name === 'AbortError') return;      // user pressed stop
-        handlers.error({ status: 0, message: 'ارتباط با دستیار قطع شد. اینترنت را بررسی کن.' });
+        handlers.error({ status: 0, message: T('err.offline') });
       });
     }
   };
@@ -146,14 +153,14 @@ window.PMChat = (function () {
       if (isPy) {
         var run = document.createElement('button');
         run.className = 'codebtn run';
-        run.textContent = '▶ اجرا';
+        run.textContent = T('code.run');
         run.addEventListener('click', function () { Py.open(code); });
         bar.appendChild(run);
       }
       var cp = document.createElement('button');
       cp.className = 'codebtn';
-      cp.textContent = 'کپی';
-      cp.addEventListener('click', function () { copy(code, cp, 'کپی شد', 'کپی'); });
+      cp.textContent = T('code.copy');
+      cp.addEventListener('click', function () { copy(code, cp, T('code.copied'), T('code.copy')); });
       bar.appendChild(cp);
       wrap.appendChild(bar);
     });
@@ -173,6 +180,19 @@ window.PMChat = (function () {
     else done();
   }
 
+  var scripts = {};
+  function loadScript(src) {
+    if (scripts[src]) return scripts[src];
+    scripts[src] = new Promise(function (ok, fail) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = ok;
+      s.onerror = function () { fail(new Error(T('err.script', { src: src }))); };
+      document.head.appendChild(s);
+    });
+    return scripts[src];
+  }
+
   /* ===================================================================
      3. State
      =================================================================== */
@@ -188,25 +208,20 @@ window.PMChat = (function () {
     onClose: null
   };
 
-  var FA = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-  function fa(n) { return String(n).replace(/\d/g, d => FA[+d]); }
-  function faNum(n) {
-    var s = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '٬');
-    return (n < 0 ? '−' : '') + fa(s);
-  }
+  var faNum = window.PMI18n.num;
   function $(s) { return document.querySelector(s); }
 
   // The backend titles a chat with the user's whole first message cut at 70
   // chars, so the list reads as near-identical sentences. Until a server-side
   // LLM title exists, a topic chip gives the eye something to sort on.
   function topicOf(title) {
-    if (/کد|پایتون|python|برنامه/i.test(title)) return 'کد';
-    if (/بار|الکتر|جریان|ولتاژ|مقاومت/.test(title)) return 'الکتریسیته';
-    if (/نیرو|شتاب|حرکت|نیوتن|پرتاب|سقوط/.test(title)) return 'مکانیک';
-    if (/گرما|دما|انرژی|ترمو/.test(title)) return 'گرما';
-    if (/نور|موج|عدسی|بازتاب/.test(title)) return 'نور';
-    if (/اتم|کوانتوم|هسته/.test(title)) return 'کوانتوم';
-    return 'فیزیک';
+    if (/کد|پایتون|python|code/i.test(title)) return 'topic.code';
+    if (/بار|الکتر|جریان|ولتاژ|مقاومت|charge|current|volt/i.test(title)) return 'topic.electricity';
+    if (/نیرو|شتاب|حرکت|نیوتن|پرتاب|سقوط|force|newton|motion/i.test(title)) return 'topic.mechanics';
+    if (/گرما|دما|انرژی|ترمو|heat|thermo|energy/i.test(title)) return 'topic.heat';
+    if (/نور|موج|عدسی|بازتاب|light|wave|lens/i.test(title)) return 'topic.light';
+    if (/اتم|کوانتوم|هسته|atom|quantum|nucle/i.test(title)) return 'topic.quantum';
+    return 'topic.physics';
   }
 
   /* ===================================================================
@@ -216,9 +231,13 @@ window.PMChat = (function () {
      carries into tomorrow. The badge must render a negative number.
      =================================================================== */
 
+  // There is no quota endpoint, so `remaining` stays null until the first
+  // answer arrives and its `done` event reports it. Null therefore means
+  // "not known yet", and is drawn as a dash — never as unlimited, which for
+  // a signed-out reader on a daily cap would simply be untrue.
   function quotaClass() {
     var r = S.quota.remaining;
-    if (r === null) return 'ok';           // admin: unlimited
+    if (r === null) return 'ok';
     if (r < 0) return 'debt';
     if (r === 0) return 'out';
     if (r < S.quota.limit * 0.1) return 'low';
@@ -230,29 +249,28 @@ window.PMChat = (function () {
 
     var badge = $('#chat-tokbadge');
     badge.className = 'tokbadge ' + cls;
-    $('#chat-tokval').textContent = (r === null) ? '∞' : faNum(r);
-    $('#drawer-quota').textContent = (r === null ? '∞' : faNum(r)) + ' توکن';
+    $('#chat-tokval').textContent = (r === null) ? '—' : faNum(r);
+    $('#drawer-quota').textContent = (r === null) ? '—' : T('chat.tokens', { n: faNum(r) });
 
     var meter = $('#chat-meter');
     meter.className = 'meter' + (cls === 'low' || cls === 'debt' ? ' warn' : '');
-    if (r === null)   meter.innerHTML = 'سهمیهٔ نامحدود';
-    else if (r < 0)   meter.innerHTML = 'سهمیهٔ امروز تمام شده و <b>' + faNum(-r) + ' توکن</b> به فردا منتقل می‌شود';
-    else if (r === 0) meter.innerHTML = 'سهمیهٔ امروز تمام شد';
-    else              meter.innerHTML = '<b>' + faNum(r) + ' توکن</b> از سهمیهٔ امروز باقی مانده';
+    if (r === null)   meter.innerHTML = T('quota.unknown');
+    else if (r < 0)   meter.innerHTML = T('quota.debt',  { n: faNum(-r) });
+    else if (r === 0) meter.innerHTML = T('quota.empty');
+    else              meter.innerHTML = T('quota.left',  { n: faNum(r) });
 
     var wall = $('#chat-wall');
     wall.innerHTML = '';
     if (blocked) {
       wall.innerHTML =
-        '<div class="wall"><h5>سقف سؤال‌های امروز تمام شد</h5><p>' +
-        (r < 0 ? 'آخرین پاسخ از سقف عبور کرد، پس فردا با ' + faNum(-r) + ' توکن بدهی شروع می‌کنی.'
-               : 'فردا سهمیهٔ تازه می‌گیری.') +
-        '</p><button id="quota-cta">دیدن مصرف و ارتقای حساب</button></div>';
+        '<div class="wall"><h5>' + T('quota.wallTitle') + '</h5><p>' +
+        (r < 0 ? T('quota.wallDebt', { n: faNum(-r) }) : T('quota.wallFresh')) +
+        '</p><button id="quota-cta">' + T('quota.wallCta') + '</button></div>';
     }
 
     var box = $('#chat-composer');
     box.disabled = blocked || S.streaming;
-    box.placeholder = blocked ? 'تا فردا نمی‌توانی سؤال بفرستی' : 'سؤالت را بنویس…';
+    box.placeholder = T(blocked ? 'chat.blocked' : 'chat.placeholder');
     syncSend();
   }
 
@@ -260,12 +278,7 @@ window.PMChat = (function () {
      5. Messages
      =================================================================== */
 
-  var SRC = {
-    site:     ['site', '📖 از مقالات سایت'],
-    external: ['external', '🔗 منبع خارجی'],
-    general:  ['general', '💭 دانش عمومی'],
-    code:     ['code', '🐍 کد']
-  };
+  var SRC = { site: 1, external: 1, general: 1, code: 1 };
 
   var ICON = {
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
@@ -277,11 +290,9 @@ window.PMChat = (function () {
     atom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>'
   };
 
-  var SEEDS = [
-    ['؟', 'تفاوت بار و جرم چیست؟'],
-    ['Σ', 'قانون دوم نیوتن را با مثال توضیح بده'],
-    ['🐍', 'کد پایتون سقوط آزاد با نمودار بنویس']
-  ];
+  function seeds() {
+    return [['؟', T('seed.1')], ['Σ', T('seed.2')], ['🐍', T('seed.3')]];
+  }
 
   function messageNode(m) {
     var wrap = document.createElement('div');
@@ -301,15 +312,15 @@ window.PMChat = (function () {
 
       if (m.source && SRC[m.source]) {
         var b = document.createElement('span');
-        b.className = 'srcbadge ' + SRC[m.source][0];
-        b.textContent = SRC[m.source][1];
+        b.className = 'srcbadge ' + m.source;
+        b.textContent = T('src.' + m.source);
         foot.appendChild(b);
       }
 
       if (m.error) {
         var rt = document.createElement('button');
         rt.className = 'retry';
-        rt.innerHTML = ICON.refresh + 'تلاش دوباره';
+        rt.innerHTML = ICON.refresh + T('chat.retry');
         rt.addEventListener('click', retryLast);
         foot.appendChild(rt);
       } else {
@@ -320,7 +331,7 @@ window.PMChat = (function () {
         // makes an answer effectively uncopyable on a phone
         var cp = document.createElement('button');
         cp.className = 'act'; cp.innerHTML = ICON.copy;
-        cp.setAttribute('aria-label', 'کپی پاسخ');
+        cp.setAttribute('aria-label', T('a11y.copyAnswer'));
         cp.addEventListener('click', function () { copy(m.message, cp); });
         acts.appendChild(cp);
 
@@ -328,7 +339,7 @@ window.PMChat = (function () {
           var btn = document.createElement('button');
           btn.className = 'act' + (m.rating === p[1] ? ' on' : '');
           btn.innerHTML = ICON[p[0]];
-          btn.setAttribute('aria-label', p[1] === 1 ? 'مفید بود' : 'مفید نبود');
+          btn.setAttribute('aria-label', T(p[1] === 1 ? 'a11y.helpful' : 'a11y.notHelpful'));
           // log_id only arrives in the `done` event of a live stream, so a
           // reloaded conversation cannot be rated until the API returns it
           btn.disabled = !m.log_id;
@@ -353,10 +364,11 @@ window.PMChat = (function () {
     if (!S.active.msgs.length && !S.streaming) {
       var e = document.createElement('div');
       e.className = 'chat-empty';
+      var SEEDS = seeds();
       e.innerHTML =
         '<span class="glyph">' + ICON.atom + '</span>' +
-        '<h3>چه چیزی را نفهمیدی؟</h3>' +
-        '<p>هر جای مقاله گیر کردی، روی علامت ؟ کنار همان پاراگراف بزن تا سؤالت با متنش اینجا بیاید. یا یکی از این‌ها را امتحان کن:</p>' +
+        '<h3>' + T('chat.emptyTitle') + '</h3>' +
+        '<p>' + T('chat.emptyBody') + '</p>' +
         '<div class="seeds">' +
           SEEDS.map(s => '<button class="seed"><span class="k">' + s[0] + '</span>' + s[1] + '</button>').join('') +
         '</div>';
@@ -376,14 +388,14 @@ window.PMChat = (function () {
     if (S.streaming) {
       var st = document.createElement('div');
       st.className = 'status'; st.id = 'stream-status';
-      st.innerHTML = '<i></i><span>در حال فکر کردن…</span>';
+      st.innerHTML = '<i></i><span>' + T('chat.thinking') + '</span>';
       scroll.appendChild(st);
     }
     if (S.active.stopped) {
       var s = document.createElement('div');
       s.className = 'stopped';
       // the server does not persist partial output on abort — say so
-      s.textContent = 'تولید پاسخ متوقف شد — این متن ذخیره نشده است';
+      s.textContent = T('chat.stopped');
       scroll.appendChild(s);
     }
     scroll.scrollTop = scroll.scrollHeight;
@@ -438,7 +450,7 @@ window.PMChat = (function () {
         history: S.active.msgs.filter(m => !m.streaming && !m.error)
                               .map(m => ({ role: m.role, message: m.message })),
         session_id: S.active.id,
-        lang: 'fa'
+        lang: window.PMI18n.lang
       },
       {
         status: function (d) {
@@ -459,7 +471,7 @@ window.PMChat = (function () {
           S.active.id = d.session_id || S.active.id;
           S.active.tokens = (S.active.tokens || 0) + (d.response_tokens || 0);
           if (typeof d.remaining === 'number') S.quota.remaining = d.remaining;
-          if (d.provider) $('#chat-sub').textContent = 'پاسخ‌دهنده: ' + d.provider;
+          if (d.provider) $('#chat-sub').textContent = T('chat.provider', { name: d.provider });
           finish();
         },
         error: function (e) {
@@ -514,10 +526,11 @@ window.PMChat = (function () {
 
     var shown = S.chats.filter(function (c) {
       if (!S.filter) return true;
-      return (c.title || '').indexOf(S.filter) !== -1 || (c.topic || '').indexOf(S.filter) !== -1;
+      return (c.title || '').indexOf(S.filter) !== -1 ||
+             T(c.topic || 'topic.physics').indexOf(S.filter) !== -1;
     });
     if (!shown.length) {
-      list.innerHTML = '<div class="list-head">چیزی پیدا نشد</div>';
+      list.innerHTML = '<div class="list-head">' + T('chat.nothingFound') + '</div>';
       return;
     }
 
@@ -529,7 +542,7 @@ window.PMChat = (function () {
 
     Object.keys(groups).forEach(function (g) {
       var h = document.createElement('div');
-      h.className = 'list-head'; h.textContent = g;
+      h.className = 'list-head'; h.textContent = T(g);
       list.appendChild(h);
       groups[g].forEach(function (c) {
         var row = document.createElement('div');
@@ -543,25 +556,25 @@ window.PMChat = (function () {
   // `date` is a MySQL string with no timezone — treat it as UTC explicitly,
   // or every conversation shifts by the device offset.
   function groupOf(dateStr) {
-    if (!dateStr) return 'امروز';
+    if (!dateStr) return 'group.today';
     var d = new Date(dateStr.replace(' ', 'T') + 'Z');
     var days = Math.floor((Date.now() - d.getTime()) / 86400000);
-    if (days < 1) return 'امروز';
-    if (days < 2) return 'دیروز';
-    if (days < 8) return 'هفتهٔ گذشته';
-    return 'قدیمی‌تر';
+    if (days < 1) return 'group.today';
+    if (days < 2) return 'group.yesterday';
+    if (days < 8) return 'group.lastWeek';
+    return 'group.older';
   }
 
   function drawRow(row, c) {
     row.innerHTML =
       '<button class="name"><span class="n1"></span>' +
       '<span class="n2"><span class="topic"></span><span class="tk"></span></span></button>' +
-      '<button class="chat-act" data-act="rename" aria-label="تغییر نام">' + ICON.pencil + '</button>' +
-      '<button class="chat-act" data-act="del" aria-label="حذف">' + ICON.trash + '</button>';
+      '<button class="chat-act" data-act="rename" aria-label="' + T('a11y.rename') + '">' + ICON.pencil + '</button>' +
+      '<button class="chat-act" data-act="del" aria-label="' + T('a11y.delete') + '">' + ICON.trash + '</button>';
 
-    row.querySelector('.n1').textContent = c.title || 'گفتگوی جدید';
-    row.querySelector('.topic').textContent = c.topic || topicOf(c.title || '');
-    row.querySelector('.tk').textContent = faNum(c.tokens || 0) + ' توکن';
+    row.querySelector('.n1').textContent = c.title || T('chat.new');
+    row.querySelector('.topic').textContent = T(c.topic || topicOf(c.title || ''));
+    row.querySelector('.tk').textContent = T('chat.tokens', { n: faNum(c.tokens || 0) });
 
     row.querySelector('.name').addEventListener('click', function () {
       closeDrawer(); openChat(c);
@@ -590,9 +603,10 @@ window.PMChat = (function () {
 
     row.querySelector('[data-act="del"]').addEventListener('click', function () {
       row.innerHTML =
-        '<div class="delbar"><p>این گفتگو حذف شود؟</p>' +
-        '<p class="keeps">از فهرست می‌رود؛ مصرف توکن ثبت‌شده باقی می‌ماند.</p>' +
-        '<div class="row2"><button class="del-yes">حذف</button><button class="del-no">انصراف</button></div></div>';
+        '<div class="delbar"><p>' + T('chat.deleteAsk') + '</p>' +
+        '<p class="keeps">' + T('chat.deleteKeeps') + '</p>' +
+        '<div class="row2"><button class="del-yes">' + T('chat.deleteYes') + '</button>' +
+        '<button class="del-no">' + T('chat.deleteNo') + '</button></div></div>';
       row.querySelector('.del-no').addEventListener('click', renderList);
       row.querySelector('.del-yes').addEventListener('click', function () {
         api.hide(c.id);
@@ -621,13 +635,14 @@ window.PMChat = (function () {
     },
     close: function () { $('#pysheet').classList.remove('on'); },
 
-    // Bundle pyodide with the app; do not load it from a CDN.
+    // Bundled under vendor/pyodide, never a CDN. The loader script is injected
+    // on first Run rather than from index.html, so the 26MB of wasm and wheels
+    // beside it are never touched by someone who only reads articles.
     load: function () {
       if (Py.loaded) return Promise.resolve(Py.loaded);
-      if (!window.loadPyodide) return Promise.reject(new Error('Pyodide bundle not found'));
-      return window.loadPyodide({ indexURL: 'vendor/pyodide/' }).then(function (p) {
-        Py.loaded = p; return p;
-      });
+      return loadScript('vendor/pyodide/pyodide.js')
+        .then(function () { return window.loadPyodide({ indexURL: 'vendor/pyodide/' }); })
+        .then(function (p) { Py.loaded = p; return p; });
     },
 
     render: function (state, payload) {
@@ -637,13 +652,14 @@ window.PMChat = (function () {
       if (state === 'warn') {
         // Not a toast: this is the user deciding to spend their phone's RAM.
         body.innerHTML =
-          '<div class="py-warn"><h5>⚠️ اجرا روی همین گوشی انجام می‌شود</h5>' +
-          '<p>کد روی سرور اجرا نمی‌شود. مفسر پایتون داخل اپ بالا می‌آید:</p>' +
-          '<ul><li>اولین اجرا حدود ۲۰ ثانیه طول می‌کشد</li>' +
-          '<li>حدود ۳۰۰ مگابایت حافظه می‌گیرد</li>' +
-          '<li>روی گوشی‌های قدیمی ممکن است اپ بسته شود</li></ul></div>' + codeHtml;
+          '<div class="py-warn"><h5>' + T('py.warnTitle') + '</h5>' +
+          '<p>' + T('py.warnBody') + '</p>' +
+          '<ul><li>' + T('py.warn1') + '</li>' +
+          '<li>' + T('py.warn2') + '</li>' +
+          '<li>' + T('py.warn3') + '</li></ul></div>' + codeHtml;
         body.querySelector('.py-code').textContent = Py.code;
-        foot.innerHTML = '<button class="py-run">شروع اجرا</button><button class="py-cancel">بستن</button>';
+        foot.innerHTML = '<button class="py-run">' + T('py.start') + '</button>' +
+                         '<button class="py-cancel">' + T('py.close') + '</button>';
         foot.querySelector('.py-run').addEventListener('click', Py.run);
         foot.querySelector('.py-cancel').addEventListener('click', Py.close);
         return;
@@ -652,20 +668,23 @@ window.PMChat = (function () {
       if (state === 'loading') {
         body.innerHTML = codeHtml +
           '<div class="py-load"><i></i><i></i><i></i><span>' +
-          (payload || 'بارگذاری مفسر پایتون…') + '</span></div>';
+          (payload || T('py.loadingInterp')) + '</span></div>';
         body.querySelector('.py-code').textContent = Py.code;
-        foot.innerHTML = '<button class="py-run" disabled>در حال آماده‌سازی…</button><button class="py-cancel">لغو</button>';
+        foot.innerHTML = '<button class="py-run" disabled>' + T('py.preparing') + '</button>' +
+                         '<button class="py-cancel">' + T('py.cancel') + '</button>';
         foot.querySelector('.py-cancel').addEventListener('click', Py.close);
         return;
       }
 
       if (state === 'result') {
-        body.innerHTML = codeHtml + '<div class="py-label">خروجی</div>' +
+        body.innerHTML = codeHtml + '<div class="py-label">' + T('py.output') + '</div>' +
           '<pre class="py-out' + (payload.error ? ' err' : '') + '"></pre>' +
-          (payload.figures || []).map(src => '<div class="py-fig"><img alt="نمودار" src="' + src + '"></div>').join('');
+          (payload.figures || []).map(src =>
+            '<div class="py-fig"><img alt="' + T('py.figure') + '" src="' + src + '"></div>').join('');
         body.querySelector('.py-code').textContent = Py.code;
         body.querySelector('.py-out').textContent = payload.text || '';
-        foot.innerHTML = '<button class="py-run">اجرای دوباره</button><button class="py-cancel">بستن</button>';
+        foot.innerHTML = '<button class="py-run">' + T('py.rerun') + '</button>' +
+                         '<button class="py-cancel">' + T('py.close') + '</button>';
         foot.querySelector('.py-run').addEventListener('click', Py.run);
         foot.querySelector('.py-cancel').addEventListener('click', Py.close);
         return;
@@ -674,16 +693,21 @@ window.PMChat = (function () {
       // ready
       body.innerHTML = codeHtml;
       body.querySelector('.py-code').textContent = Py.code;
-      foot.innerHTML = '<button class="py-run">▶ اجرا</button><button class="py-cancel">بستن</button>';
+      foot.innerHTML = '<button class="py-run">' + T('code.run') + '</button>' +
+                       '<button class="py-cancel">' + T('py.close') + '</button>';
       foot.querySelector('.py-run').addEventListener('click', Py.run);
       foot.querySelector('.py-cancel').addEventListener('click', Py.close);
     },
 
     run: function () {
-      Py.render('loading', 'بارگذاری مفسر پایتون…');
+      Py.render('loading', T('py.loadingInterp'));
       Py.load().then(function (p) {
-        Py.render('loading', 'آماده‌سازی numpy و matplotlib…');
+        Py.render('loading', T('py.loadingPkgs'));
         return p.loadPackagesFromImports(Py.code).then(function () {
+          // Pyodide's default matplotlib backend draws straight into the DOM.
+          // AGG keeps figures in memory so collectFigures can serialise them,
+          // and makes plt.show() a no-op instead of an error.
+          try { p.runPython('import matplotlib\nmatplotlib.use("AGG")'); } catch (e) {}
           var out = [];
           p.setStdout({ batched: function (s) { out.push(s); } });
           p.setStderr({ batched: function (s) { out.push(s); } });
@@ -720,7 +744,7 @@ window.PMChat = (function () {
      =================================================================== */
 
   function newChat(opts) {
-    var c = { id: uuid(), title: '', topic: 'تازه', date: null, tokens: 0, msgs: [] };
+    var c = { id: uuid(), title: '', topic: 'topic.new', date: null, tokens: 0, msgs: [] };
     S.chats.unshift(c);
     openChat(c, opts);
     return c;
@@ -738,8 +762,8 @@ window.PMChat = (function () {
     opts = opts || {};
     S.active = chat;
     chat.stopped = false;
-    $('#chat-title').textContent = chat.title || 'گفتگوی جدید';
-    $('#chat-sub').textContent = chat.msgs && chat.msgs.length ? 'دستیار من فیزیکی' : 'گفتگوی تازه';
+    $('#chat-title').textContent = chat.title || T('chat.new');
+    $('#chat-sub').textContent = T(chat.msgs && chat.msgs.length ? 'chat.assistant' : 'chat.fresh');
 
     $('#chat-draft').innerHTML = '';
     S.draftCite = opts.cite || null;
@@ -795,63 +819,6 @@ window.PMChat = (function () {
     });
   }
 
-  /* ===================================================================
-     11. Mock stream — removed once MOCK = false
-     =================================================================== */
-
-  var FIXTURES = {
-    sessions: [
-      { id: 'm1', title: 'سه قانون نیوتن را با تیتر و فهرست بنویس', date: '2026-09-21 09:12:00', tokens: 303 },
-      { id: 'm2', title: 'کد پایتون پرتابه با نمودار بنویس', date: '2026-09-21 08:40:00', tokens: 335 },
-      { id: 'm3', title: 'ترانزیستور چیست؟', date: '2026-09-16 21:05:00', tokens: 1500 }
-    ],
-    messages: {
-      m1: [
-        { role: 'user', message: 'سه قانون نیوتن را با تیتر و فهرست بنویس' },
-        { role: 'assistant', source: 'site', message:
-          '## سه قانون نیوتن\n\nدر اینجا سه اصل بنیادین مکانیک کلاسیک آمده است:\n\n' +
-          '### ۱. قانون اول (اینرسی)\nهر جسمی در حالت سکون یا حرکت یکنواخت باقی می‌ماند، مگر اینکه بر آن **نیروی حاصل‌جمع غیر صفر** وارد شود.\n\n' +
-          '$$\\sum \\vec{F} = 0 \\Rightarrow \\vec{a} = 0$$\n\n' +
-          '### ۲. قانون دوم (حرکت)\nشتاب مستقیماً با **نیرو** و معکوساً با **جرم** نسبت دارد.\n\n' +
-          '$$\\vec{F} = m\\vec{a}$$\n\n' +
-          '> واحد نیرو در SI نیوتن است: 1 N = 1 kg·m/s²' }
-      ],
-      m2: [
-        { role: 'user', message: 'کد پایتون پرتابه با نمودار بنویس' },
-        { role: 'assistant', source: 'code', message:
-          '```python\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n' +
-          'g = 9.81\nv0 = 25.0\nangle = 45.0\n\n' +
-          't = np.linspace(0, 2*v0*np.sin(np.radians(angle))/g, 400)\n' +
-          'x = v0 * np.cos(np.radians(angle)) * t\n' +
-          'y = v0 * np.sin(np.radians(angle)) * t - 0.5 * g * t**2\n\n' +
-          'plt.plot(x, y)\nplt.xlabel("X (m)")\nplt.ylabel("Y (m)")\n' +
-          'plt.title("Projectile Motion")\nplt.grid(True)\nplt.show()\n\n' +
-          'print(f"Range: {x[-1]:.2f} m")\n```' }
-      ],
-      m3: []
-    }
-  };
-
-  function mockStream(payload, h, signal) {
-    var steps = ['در حال جست‌وجو در مقالات سایت…', 'در حال فکر کردن…', 'در حال نوشتن پاسخ…'];
-    var isCode = /کد|پایتون|python/i.test(payload.message);
-    var body = isCode ? FIXTURES.messages.m2[1].message : FIXTURES.messages.m1[1].message;
-    var i = 0, pos = 0, timer;
-
-    function tick() {
-      if (signal && signal.aborted) { clearInterval(timer); return; }
-      if (i < steps.length) { h.status({ text: steps[i++] }); return; }
-      if (pos === 0) h.source({ type: isCode ? 'code' : 'site' });
-      var chunk = body.slice(pos, pos + 14);
-      pos += 14;
-      if (chunk) { h.token({ text: chunk }); return; }
-      clearInterval(timer);
-      h.done({ session_id: payload.session_id, remaining: Math.max(0, (S.quota.remaining || 100000) - 300),
-               response_tokens: 300, provider: 'groq', log_id: Date.now() });
-    }
-    timer = setInterval(tick, 60);
-    return Promise.resolve();
-  }
 
   /* public */
   return {
@@ -861,6 +828,23 @@ window.PMChat = (function () {
       if (opts.newChat || !S.chats.length) newChat(opts);
       else openChat(S.chats[0], opts);
     },
-    onClose: function (fn) { S.onClose = fn; }
+    onClose: function (fn) { S.onClose = fn; },
+    // Pyodide is 26MB and iOS evicts storage under pressure anyway. Settings
+    // offers to drop it so the runtime is re-fetched fresh on the next Run.
+    resetPython: function () {
+      Py.loaded = null;
+      if (!window.caches) return Promise.resolve();
+      return caches.keys().then(function (names) {
+        return Promise.all(names.map(function (n) {
+          return caches.open(n).then(function (c) {
+            return c.keys().then(function (reqs) {
+              return Promise.all(reqs
+                .filter(function (r) { return r.url.indexOf('/vendor/pyodide/') !== -1; })
+                .map(function (r) { return c.delete(r); }));
+            });
+          });
+        }));
+      }).catch(function () {});
+    }
   };
 })();

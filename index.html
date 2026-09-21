@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-dir="rtl">
 <head>
 <meta charset="utf-8">
 
@@ -25,10 +25,7 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap">
-
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
 <link rel="stylesheet" href="src/styles/tokens.css">
 <link rel="stylesheet" href="src/styles/app.css">
 <link rel="stylesheet" href="src/styles/chat.css">
@@ -51,18 +48,21 @@
     </div>
 
     <header class="topbar topbar--dark">
-      <button class="iconbtn" id="orb-back" hidden aria-label="بازگشت">
+      <button class="iconbtn" id="orb-back" hidden data-i18n-aria="a11y.back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
-      <span class="crumb" id="orb-crumb">من فیزیکی</span>
-      <button class="iconbtn iconbtn--ai" id="orb-ai" hidden aria-label="دستیار هوش مصنوعی">
+      <span class="crumb" id="orb-crumb"></span>
+      <button class="iconbtn" id="orb-account" data-i18n-aria="a11y.account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.6"/><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0"/></svg>
+      </button>
+      <button class="iconbtn iconbtn--ai" id="orb-ai" hidden data-i18n-aria="a11y.ai">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
       </button>
     </header>
 
     <div class="banner" id="copyright-banner" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-      <span>به‌دلیل محدودیت‌های کپی‌رایت، به‌جای اصل کتاب‌ها جزوه‌ای بر پایهٔ آن‌ها آمده است. پرسش‌ها تا حد ممکن به سؤالات اصلی نزدیک‌اند، اما حق نشر رعایت شده.</span>
+      <span data-i18n="banner.copyright"></span>
     </div>
 
     <div class="orb-stage">
@@ -73,14 +73,14 @@
   <!-- ===== list screen (chapters / sections) ===== -->
   <section class="screen" id="s-list" data-template="list">
     <header class="topbar topbar--light">
-      <button class="iconbtn" data-back aria-label="بازگشت">
+      <button class="iconbtn" data-back data-i18n-aria="a11y.back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
       <div class="topbar-titles">
-        <div class="screen-title" id="list-title">فصل‌ها</div>
+        <div class="screen-title" id="list-title" data-i18n="list.title"></div>
         <div class="crumb" id="list-crumb"></div>
       </div>
-      <button class="iconbtn iconbtn--ai" data-open-ai aria-label="دستیار هوش مصنوعی">
+      <button class="iconbtn iconbtn--ai" data-open-ai data-i18n-aria="a11y.ai">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
       </button>
     </header>
@@ -90,14 +90,14 @@
   <!-- ===== reader screen ===== -->
   <section class="screen" id="s-reader" data-template="reader">
     <header class="topbar topbar--light">
-      <button class="iconbtn" data-back aria-label="بازگشت">
+      <button class="iconbtn" data-back data-i18n-aria="a11y.back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
       <div class="topbar-titles">
-        <div class="screen-title" id="reader-title">بار الکتریکی</div>
-        <div class="crumb" id="reader-crumb">فصل ۱ ← بند ۱</div>
+        <div class="screen-title" id="reader-title"></div>
+        <div class="crumb" id="reader-crumb"></div>
       </div>
-      <button class="iconbtn iconbtn--ai" data-open-ai aria-label="دستیار هوش مصنوعی">
+      <button class="iconbtn iconbtn--ai" data-open-ai data-i18n-aria="a11y.ai">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
       </button>
     </header>
@@ -108,18 +108,18 @@
   <!-- ===== chat screen ===== -->
   <section class="screen" id="s-chat" data-template="chat">
     <header class="topbar topbar--light">
-      <button class="iconbtn" id="chat-menu" aria-label="گفتگوها">
+      <button class="iconbtn" id="chat-menu" data-i18n-aria="a11y.conversations">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <div class="topbar-titles">
-        <div class="screen-title" id="chat-title">گفتگوی جدید</div>
-        <div class="crumb" id="chat-sub">دستیار من فیزیکی</div>
+        <div class="screen-title" id="chat-title"></div>
+        <div class="crumb" id="chat-sub"></div>
       </div>
-      <button class="tokbadge ok" id="chat-tokbadge" aria-label="سهمیهٔ توکن">
+      <button class="tokbadge ok" id="chat-tokbadge" data-i18n-aria="a11y.quota">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5V7a1.6 1.6 0 0 1 1.6-1.6h14.8A1.6 1.6 0 0 1 21 7v2.5a2.5 2.5 0 0 0 0 5V17a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M14 6v12"/></svg>
         <span id="chat-tokval">∞</span>
       </button>
-      <button class="iconbtn" id="chat-close" aria-label="بستن">
+      <button class="iconbtn" id="chat-close" data-i18n-aria="a11y.close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </header>
@@ -127,7 +127,7 @@
     <div class="chat-wrap">
       <div class="lab-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v5M12 17.5v.01"/><path d="M10.3 3.9 2.4 17.6A1.9 1.9 0 0 0 4 20.5h16a1.9 1.9 0 0 0 1.6-2.9L13.7 3.9a1.9 1.9 0 0 0-3.4 0z"/></svg>
-        <span>نسخهٔ آزمایشی — دستیار هنوز در حال آموزش است. به پاسخ‌ها کاملاً اعتماد نکن.</span>
+        <span data-i18n="chat.labNote"></span>
       </div>
 
       <div class="chat-scroll" id="chat-scroll"></div>
@@ -136,11 +136,11 @@
         <div id="chat-wall"></div>
         <div id="chat-draft"></div>
         <div class="composer-row">
-          <textarea id="chat-composer" rows="1" placeholder="سؤالت را بنویس…"></textarea>
-          <button class="send" id="chat-send" disabled aria-label="ارسال">
+          <textarea id="chat-composer" rows="1" data-i18n-ph="chat.placeholder"></textarea>
+          <button class="send" id="chat-send" disabled data-i18n-aria="a11y.send">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
           </button>
-          <button class="stop" id="chat-stop" hidden aria-label="توقف">
+          <button class="stop" id="chat-stop" hidden data-i18n-aria="a11y.stop">
             <svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
           </button>
         </div>
@@ -150,30 +150,30 @@
 
     <div class="drawer" id="chat-drawer">
       <div class="drawer-head">
-        <h3>گفتگوها</h3>
-        <button class="iconbtn" id="drawer-close" aria-label="بستن">
+        <h3 data-i18n="chat.conversations"></h3>
+        <button class="iconbtn" id="drawer-close" data-i18n-aria="a11y.close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
       <button class="newchat" id="chat-new">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        گفتگوی جدید
+        <span data-i18n="chat.new"></span>
       </button>
       <div class="searchbox">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="chat-search" placeholder="جست‌وجو در گفتگوها">
+        <input id="chat-search" data-i18n-ph="chat.search">
       </div>
       <div class="chat-list" id="chat-list"></div>
       <div class="drawer-foot">
-        سهمیهٔ امروز: <b id="drawer-quota">∞</b>
+        <span data-i18n="chat.quotaToday"></span> <b id="drawer-quota">∞</b>
       </div>
     </div>
     <div class="scrim" id="chat-scrim"></div>
 
     <div class="pysheet" id="pysheet">
       <div class="py-head">
-        <span>🐍 اجرای کد Python</span>
-        <button class="x" id="py-close" aria-label="بستن">
+        <span data-i18n="py.title"></span>
+        <button class="x" id="py-close" data-i18n-aria="a11y.close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
@@ -182,26 +182,104 @@
     </div>
   </section>
 
+  <!-- ===== auth — Telegram only, no phone number =====
+       Product decision, not an implementation shortcut: tutor replies already
+       arrive in Telegram, so a second identity would be a second inbox. -->
+  <section class="screen" id="s-auth" data-template="account">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-page-back data-i18n-aria="a11y.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles"><div class="screen-title" data-i18n="auth.title"></div></div>
+    </header>
+    <div class="scroll">
+      <div class="page">
+        <div class="hero">
+          <span class="hero-ico">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 4.3 2.9 11.6c-.9.35-.86 1.66.06 1.95l4.7 1.47 1.8 5.5c.24.74 1.2.9 1.68.3l2.5-3.1 4.7 3.45c.6.44 1.45.11 1.6-.62l3-14.1c.17-.8-.6-1.46-1.34-1.15z"/></svg>
+          </span>
+          <h2 data-i18n="auth.h"></h2>
+          <p data-i18n="auth.why"></p>
+        </div>
+        <div id="auth-state"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== account ===== -->
+  <section class="screen" id="s-account" data-template="account">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-page-back data-i18n-aria="a11y.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles"><div class="screen-title" data-i18n="account.title"></div></div>
+    </header>
+    <div class="scroll"><div class="page" id="account-body"></div></div>
+  </section>
+
+  <!-- ===== usage ===== -->
+  <section class="screen" id="s-usage" data-template="account">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-page-back data-i18n-aria="a11y.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles"><div class="screen-title" data-i18n="usage.title"></div></div>
+    </header>
+    <div class="scroll"><div class="page" id="usage-body"></div></div>
+  </section>
+
+  <!-- ===== offline library ===== -->
+  <section class="screen" id="s-saved" data-template="account">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-page-back data-i18n-aria="a11y.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles"><div class="screen-title" data-i18n="saved.title"></div></div>
+    </header>
+    <div class="scroll"><div class="page" id="saved-body"></div></div>
+  </section>
+
+  <!-- ===== settings ===== -->
+  <section class="screen" id="s-settings" data-template="account">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-page-back data-i18n-aria="a11y.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles"><div class="screen-title" data-i18n="settings.title"></div></div>
+    </header>
+    <div class="scroll"><div class="page" id="settings-body"></div></div>
+  </section>
+
+  <!-- ===== onboarding — first run only, always skippable ===== -->
+  <div class="onboard" id="onboard" hidden>
+    <div class="onb-track" id="onb-track"></div>
+    <div class="onb-foot">
+      <button class="onb-skip" id="onb-skip" data-i18n="onb.skip"></button>
+      <div class="onb-dots" id="onb-dots"></div>
+      <button class="onb-next" id="onb-next"></button>
+    </div>
+  </div>
+
   <!-- ===== bottom sheet ===== -->
   <div class="scrim" id="scrim" hidden></div>
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
     <div class="sheet-handle"></div>
-    <h3 class="t-h2" id="sheet-title">این پاراگراف را نفهمیدم</h3>
+    <h3 class="t-h2" id="sheet-title" data-i18n="sheet.paraTitle"></h3>
     <p class="t-label sheet-sub" id="sheet-sub"></p>
 
     <button class="opt opt--ai" id="opt-ai">
       <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg></span>
       <span class="opt-text">
-        <span class="opt-t1">از دستیار بپرس</span>
-        <span class="opt-t2">پاسخ فوری، از سهمیهٔ توکن تو کم می‌شود</span>
+        <span class="opt-t1" data-i18n="sheet.optAi"></span>
+        <span class="opt-t2" data-i18n="sheet.optAiSub"></span>
       </span>
     </button>
 
     <button class="opt opt--tutor" id="opt-tutor">
       <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
       <span class="opt-text">
-        <span class="opt-t1">برای استاد بفرست</span>
-        <span class="opt-t2">پاسخ در تلگرام به تو اطلاع داده می‌شود</span>
+        <span class="opt-t1" data-i18n="sheet.optTutor"></span>
+        <span class="opt-t2" data-i18n="sheet.optTutorSub"></span>
       </span>
     </button>
 
@@ -211,12 +289,37 @@
   <!-- iOS has no beforeinstallprompt, so the only way to be installed is to
        teach the user the Share → Add to Home Screen gesture. -->
   <div class="ios-tip" id="ios-tip" hidden>
-    <button class="ios-tip-close" id="ios-tip-close" aria-label="بستن">✕</button>
-    <p>برای نصب روی آیفون: دکمهٔ <b>اشتراک‌گذاری</b> در نوار پایین سافاری، سپس <b>Add to Home Screen</b>.</p>
+    <button class="ios-tip-close" id="ios-tip-close" data-i18n-aria="a11y.close">✕</button>
+    <p data-i18n="ios.tip"></p>
+  </div>
+
+  <!-- The app ships outside Google Play, so nothing updates it automatically.
+       It asks the site instead. Hidden until a newer version actually exists. -->
+  <div class="ios-tip update-tip" id="update-tip" hidden>
+    <button class="ios-tip-close" id="update-tip-close" data-i18n-aria="a11y.close">✕</button>
+    <p><span id="update-tip-text"></span>
+      <a id="update-tip-link" class="update-tip-link" target="_blank" rel="noopener"></a></p>
   </div>
 
 </div>
 
+<!-- Bundled, never from a CDN: the app has to boot with no network. -->
+<script src="vendor/marked/marked.min.js"></script>
+<script>
+// Verbatim from the site (RECON-REPORT §1.7). The delimiters matter: answers
+// come back with both \( \) and $ forms, and dropping either leaves raw TeX.
+window.MathJax = {
+  tex: {
+    inlineMath:  [['\\(','\\)'], ['$','$']],
+    displayMath: [['\\[','\\]'], ['$$','$$']],
+    packages: { '[+]': ['ams'] }
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="vendor/mathjax/tex-chtml.js" id="MathJax-script" async></script>
+
+<script src="src/js/i18n.js"></script>
 <script src="src/js/chat.js"></script>
 <script src="src/js/app.js"></script>
 </body>

@@ -1,0 +1,23 @@
+node_modules/
+
+# Staged copy of the web assets for Capacitor, produced by tools/sync-www.sh.
+# Output, not source — rebuild it with `npm run sync`.
+www/
+
+# Signing material — never commit. The previous repo hard-coded these in
+# build.gradle and they are still in its git history.
+android/keystore.properties
+android/app/release.keystore
+
+# Gradle output
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+
+# test/screens/ is deliberately NOT ignored — BUILD.md lists it as a
+# deliverable, so the screenshots are reviewed in the diff.
+
+.DS_Store

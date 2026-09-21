@@ -5,6 +5,13 @@
    They mirror the Figma styles one-to-one:
        Figma  Primary/Default   ⇄   CSS  --color-primary-default
    Never hard-code a color or a size anywhere else in the app.
+
+   Layout of this file:
+     :root                                light theme + theme-independent
+     @media (prefers-color-scheme: dark)  dark values, unless opted out
+     :root[data-theme="dark"]             the same dark values, chosen
+   Only token *values* change between themes. No component selector ever
+   appears inside a theme block.
    ===================================================================== */
 
 :root {
@@ -13,19 +20,28 @@
   /* The site's brand is #2563EB. Change this one line and the whole app
      follows — that is the point of keeping colors in tokens. */
   --color-primary-light:     #6C63FF;
+  --color-primary-glow:      #8B84FF;   /* the lit end of every primary gradient */
   --color-primary-subtle:    #EEF2FF;
   --color-primary-hover:     #DDE3FF;
   --color-text-title:        #111827;
   --color-text-body:         #374151;
   --color-text-muted:        #6B7280;
+  --color-text-faint:        #A8AFC0;   /* resting icon glyphs */
   --color-text-on-primary:   #FFFFFF;
   --color-surface-background:#F9FAFB;
   --color-surface-card:      #FFFFFF;
-  --color-surface-board:     #0B1026;
-  --color-surface-bubble-user:#4F46E5;
   --color-surface-bubble-ai: #F3F4F6;
   --color-border-default:    #E5E7EB;
+  --color-border-focus:      #C7CDFF;
   --color-accent-warning:    #F2B155;
+  --color-scrim:             rgba(8,12,28,.5);
+  --color-shadow-strong:     rgba(8,12,28,.3);
+
+  /* practice rows — quiz, problems, flashcards, game — read as a warm band
+     against the cool blue of reading content */
+  --color-band-from:         #FFF3E0;
+  --color-band-to:           #FFE4BF;
+  --color-band-fg:           #B26B12;
 
   /* answer provenance — one per `source` event from the stream */
   --color-src-site-fg:       #059669;
@@ -44,22 +60,53 @@
   /* feedback */
   --color-danger:            #DC2626;
   --color-danger-strong:     #B91C1C;
+  --color-danger-deep:       #991B1B;
   --color-danger-bg:         #FEF2F2;
   --color-danger-br:         #FECACA;
   --color-success:           #16A34A;
   --color-warn-fg:           #8A5A12;
+  --color-warn-icon:         #D08A1E;
   --color-warn-bg:           #FFF8EC;
   --color-warn-br:           #F6E3C4;
 
-  /* code surface — deliberately fixed in both themes */
+  /* ---- surfaces that never follow the theme ----
+     The board is the app's identity, and the code and Python surfaces are
+     dark on purpose: a light code block above a dark terminal output reads
+     as two unrelated programs. These have no dark-theme counterpart. */
+  --color-surface-board:     #0B1026;
+  --color-board-glow:        #23306B;
+  --color-board-top:         #182052;
+  --color-board-bottom:      #080C1C;
+  --color-text-on-board:     #E8ECF7;
+  --color-banner-fg:         #F7D9A8;
+
   --color-surface-code:      #0F172A;
-  --font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-code-fg:           #E2E8F0;
+  --color-code-muted:        #94A3B8;
+  --color-code-run:          #4ADE80;
+  --color-code-ok:           #059669;   /* "copied" on the dark code bar */
+  --color-figure-paper:      #FFFFFF;   /* matplotlib renders on white; the mat has to match */
+  --color-tooltip-bg:        rgba(17,24,39,.92);
+
+  --color-py-bg:             #0B1120;
+  --color-py-bar:            #141B2E;
+  --color-py-line:           #243049;
+  --color-py-line-soft:      #1B2440;
+  --color-py-label:          #475569;
+  --color-py-disabled:       #64748B;
+  --color-py-out:            #A3E635;
+  --color-py-err:            #F87171;
+  --color-py-warn-bg:        #2A1F0B;
+  --color-py-warn-br:        #5A4212;
+  --color-py-warn-fg:        #FBBF24;
+  --color-py-warn-body:      #D6BE8A;
 
   /* ---- type ----
      Persian needs more leading than Latin: 180% for body copy.
      150% (the Latin default) makes descenders and diacritics collide. */
   --font-family: Vazirmatn, system-ui, "Segoe UI", sans-serif;
   --font-family-formula: "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --font-h1-size: 24px;   --font-h1-weight: 600;   --font-h1-lh: 1.5;
   --font-h2-size: 18px;   --font-h2-weight: 600;   --font-h2-lh: 1.5;
@@ -93,6 +140,116 @@
   --content-max: 560px;        /* keeps lines readable on iPad / large iPhones */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* ---- direction ----
+     Every rule in the app uses logical properties, so mirroring is free.
+     This is the one value that cannot be: a drawer parked off the start
+     edge needs +100% in RTL and -100% in LTR. i18n.js sets data-dir. */
+  --drawer-park: 100%;
+}
+
+:root[data-dir="ltr"] { --drawer-park: -100%; }
+
+/* =====================================================================
+   Dark theme — values only.
+   The two blocks are identical on purpose: the media query follows the
+   OS, the attribute lets the Settings screen override it.
+   ===================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary-default:   #7C74FF;
+    --color-primary-light:     #9A93FF;
+    --color-primary-glow:      #B3ADFF;
+    --color-primary-subtle:    #23264A;
+    --color-primary-hover:     #2E3260;
+    --color-text-title:        #F1F4FB;
+    --color-text-body:         #C9D0E0;
+    --color-text-muted:        #8C95AC;
+    --color-text-faint:        #5C6480;
+    --color-surface-background:#0F1420;
+    --color-surface-card:      #171C2B;
+    --color-surface-bubble-ai: #1E2435;
+    --color-border-default:    #2A3145;
+    --color-border-focus:      #4A4E86;
+    --color-scrim:             rgba(0,0,0,.62);
+    --color-shadow-strong:     rgba(0,0,0,.6);
+
+    --color-band-from:         #35270F;
+    --color-band-to:           #453116;
+    --color-band-fg:           #E8B060;
+
+    --color-src-site-fg:       #34D399;
+    --color-src-site-bg:       #10291F;
+    --color-src-site-br:       #1F5C45;
+    --color-src-external-fg:   #7EA8FF;
+    --color-src-external-bg:   #16203A;
+    --color-src-external-br:   #2E4478;
+    --color-src-general-fg:    #98A1B8;
+    --color-src-general-bg:    #1A1F2E;
+    --color-src-general-br:    #2A3145;
+    --color-src-code-fg:       #E0A445;
+    --color-src-code-bg:       #2A2110;
+    --color-src-code-br:       #5B4519;
+
+    --color-danger:            #F87171;
+    --color-danger-strong:     #FCA5A5;
+    --color-danger-deep:       #FECACA;
+    --color-danger-bg:         #2A1517;
+    --color-danger-br:         #5A2327;
+    --color-success:           #4ADE80;
+    --color-warn-fg:           #FBBF24;
+    --color-warn-icon:         #E0A445;
+    --color-warn-bg:           #2A1F0B;
+    --color-warn-br:           #5A4212;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-primary-default:   #7C74FF;
+  --color-primary-light:     #9A93FF;
+  --color-primary-glow:      #B3ADFF;
+  --color-primary-subtle:    #23264A;
+  --color-primary-hover:     #2E3260;
+  --color-text-title:        #F1F4FB;
+  --color-text-body:         #C9D0E0;
+  --color-text-muted:        #8C95AC;
+  --color-text-faint:        #5C6480;
+  --color-surface-background:#0F1420;
+  --color-surface-card:      #171C2B;
+  --color-surface-bubble-ai: #1E2435;
+  --color-border-default:    #2A3145;
+  --color-border-focus:      #4A4E86;
+  --color-scrim:             rgba(0,0,0,.62);
+  --color-shadow-strong:     rgba(0,0,0,.6);
+
+  --color-band-from:         #35270F;
+  --color-band-to:           #453116;
+  --color-band-fg:           #E8B060;
+
+  --color-src-site-fg:       #34D399;
+  --color-src-site-bg:       #10291F;
+  --color-src-site-br:       #1F5C45;
+  --color-src-external-fg:   #7EA8FF;
+  --color-src-external-bg:   #16203A;
+  --color-src-external-br:   #2E4478;
+  --color-src-general-fg:    #98A1B8;
+  --color-src-general-bg:    #1A1F2E;
+  --color-src-general-br:    #2A3145;
+  --color-src-code-fg:       #E0A445;
+  --color-src-code-bg:       #2A2110;
+  --color-src-code-br:       #5B4519;
+
+  --color-danger:            #F87171;
+  --color-danger-strong:     #FCA5A5;
+  --color-danger-deep:       #FECACA;
+  --color-danger-bg:         #2A1517;
+  --color-danger-br:         #5A2327;
+  --color-success:           #4ADE80;
+  --color-warn-fg:           #FBBF24;
+  --color-warn-icon:         #E0A445;
+  --color-warn-bg:           #2A1F0B;
+  --color-warn-br:           #5A4212;
 }
 
 /* Type roles as classes, so markup states intent rather than size. */

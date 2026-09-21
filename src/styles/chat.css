@@ -1,0 +1,291 @@
+
+
+/* =====================================================================
+   chat — ported from the approved prototype.
+   Every color here comes from tokens.css; none are literals except the
+   code-block surface, which is deliberately fixed dark in both themes.
+   ===================================================================== */
+/* ---------- chat ---------- */
+.chat-wrap{flex:1;display:flex;flex-direction:column;background:var(--color-surface-background);min-height:0}
+.chat-scroll{flex:1;overflow-y:auto;padding:14px 14px 10px;display:flex;flex-direction:column;gap:14px}
+
+/* token badge — the header span that does nothing today becomes a real button */
+.tokbadge{
+  flex:0 0 auto;display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:99px;border:1px solid transparent;
+  font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;
+}
+.tokbadge svg{width:12px;height:12px}
+.tokbadge.ok  {background:var(--color-primary-subtle);color:var(--color-primary-default);border-color:#DDE3FF}
+.tokbadge.low {background:#FFF8EC;color:#8A5A12;border-color:#F6E3C4}
+.tokbadge.out {background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.tokbadge.debt{background:#B91C1C;color:#fff;border-color:#B91C1C}
+
+/* ---------- messages ---------- */
+.msg{display:flex;flex-direction:column;gap:5px;max-width:88%}
+.msg.me{align-self:flex-start}          /* RTL: user sits at the start edge, matching the site */
+.msg.ai{align-self:flex-end;max-width:94%}
+
+.bubble{padding:11px 14px;border-radius:16px;font-size:14.5px;line-height:1.75}
+.msg.me .bubble{background:var(--color-primary-default);color:#fff;border-end-start-radius:5px;white-space:pre-wrap}
+.msg.ai .bubble{background:var(--color-surface-card);color:var(--color-text-body);border:1px solid var(--color-border-default);border-end-end-radius:5px}
+.msg.err .bubble{background:#FEF2F2;border-color:#FECACA;color:#991B1B}
+
+/* markdown inside an answer */
+.bubble h3{margin:14px 0 6px;font-size:15.5px;font-weight:700;color:var(--color-primary-default);border-bottom:1px solid var(--color-border-default);padding-bottom:4px;line-height:1.5}
+.bubble h3:first-child{margin-top:0}
+.bubble h4{margin:12px 0 5px;font-size:14px;font-weight:700;color:var(--color-text-title)}
+.bubble p{margin:0 0 9px}
+.bubble p:last-child{margin-bottom:0}
+.bubble ol,.bubble ul{margin:6px 0 10px;padding-inline-start:20px}
+.bubble li{margin-bottom:4px}
+.bubble strong{font-weight:700;color:var(--color-text-title)}
+.bubble blockquote{
+  margin:9px 0;padding:7px 11px;border-radius:0 8px 8px 0;
+  border-inline-start:3px solid var(--color-primary-default);
+  background:var(--color-primary-subtle);color:var(--color-primary-default);font-size:13.5px;
+}
+.bubble code.inl{
+  background:var(--color-surface-background);border:1px solid var(--color-border-default);color:var(--color-primary-default);
+  padding:1px 5px;border-radius:4px;font-size:.88em;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  direction:ltr;display:inline-block;
+}
+
+/* formulas and code stay LTR inside an RTL bubble */
+.mathline{
+  direction:ltr;text-align:center;overflow-x:auto;
+  font-family:"Iowan Old Style",Georgia,serif;font-style:italic;font-size:16px;
+  color:var(--color-text-title);padding:10px 8px;margin:10px 0;
+  background:var(--color-surface-background);border:1px solid var(--color-border-default);border-radius:10px;
+}
+
+.codewrap{position:relative;margin:10px 0}
+.codewrap pre{
+  direction:ltr;text-align:left;margin:0;
+  background:#0F172A;color:#E2E8F0;border-radius:10px;
+  padding:34px 14px 14px;overflow-x:auto;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12.5px;line-height:1.65;
+}
+.codebar{position:absolute;top:7px;inset-inline-end:8px;display:flex;gap:6px;direction:ltr}
+.codebtn{
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.1);
+  color:#94A3B8;border-radius:6px;padding:3px 9px;cursor:pointer;
+  font-family:inherit;font-size:10.5px;
+}
+.codebtn:hover{background:rgba(255,255,255,.2);color:#fff}
+.codebtn.run{background:rgba(22,163,74,.16);border-color:rgba(74,222,128,.28);color:#4ADE80}
+.codebtn.copied{background:#059669;border-color:#059669;color:#fff}
+
+/* streaming */
+.bubble.typing::after{content:"▋";color:var(--color-primary-default);animation:cursor .75s steps(1) infinite;margin-inline-start:2px}
+@keyframes cursor{50%{opacity:0}}
+.status{
+  align-self:flex-end;display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--color-text-muted);padding:0 4px;
+}
+.status i{width:5px;height:5px;border-radius:50%;background:var(--color-primary-light);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* the row under an answer: where it came from, and what you can do with it */
+.msg-foot{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:0 3px}
+.srcbadge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:8px;font-size:10.5px;border:1px solid;
+}
+.srcbadge.site    {color:#059669;background:#ECFDF5;border-color:#A7F3D0}
+.srcbadge.external{color:#2563EB;background:#EFF6FF;border-color:#BFDBFE}
+.srcbadge.general {color:#6B7280;background:#F9FAFB;border-color:#E5E7EB}
+.srcbadge.code    {color:#B45309;background:#FFFBEB;border-color:#FDE68A}
+.msg-acts{display:flex;gap:2px;margin-inline-start:auto}
+.act{
+  width:28px;height:28px;border:0;border-radius:8px;background:none;color:#A8AFC0;
+  cursor:pointer;display:grid;place-items:center;font-size:13px;line-height:1;
+}
+.act:hover{background:var(--color-border-default);color:var(--color-text-body)}
+.act.on{color:var(--color-primary-default);background:var(--color-primary-subtle)}
+.act svg{width:14px;height:14px}
+.stopped{
+  align-self:flex-end;font-size:11px;color:var(--color-text-muted);
+  background:var(--color-border-default);padding:3px 10px;border-radius:99px;
+}
+.retry{
+  display:inline-flex;align-items:center;gap:6px;margin-top:2px;
+  padding:6px 12px;border:1px solid #FECACA;border-radius:10px;
+  background:var(--color-surface-card);color:#B91C1C;font-family:inherit;font-size:12px;cursor:pointer;
+}
+.retry svg{width:13px;height:13px}
+
+/* empty state — the biggest gap on the site today */
+.chat-empty{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;padding:20px;text-align:center}
+.chat-empty .glyph{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,#8B84FF,var(--color-primary-default));color:#fff}
+.chat-empty .glyph svg{width:32px;height:32px}
+.chat-empty h3{margin:0;font-size:15.5px;font-weight:600;color:var(--color-text-title)}
+.chat-empty p{margin:0;font-size:12.5px;color:var(--color-text-muted);line-height:1.9;max-width:32ch}
+.seeds{display:flex;flex-direction:column;gap:7px;width:100%;max-width:290px}
+.seed{
+  display:flex;align-items:center;gap:9px;padding:10px 12px;
+  border:1px solid var(--color-border-default);border-radius:12px;background:var(--color-surface-card);
+  font-family:inherit;font-size:12.5px;color:var(--color-text-body);text-align:start;cursor:pointer;
+}
+.seed:hover{border-color:#C7CDFF;background:var(--color-primary-subtle)}
+.seed .k{
+  flex:0 0 auto;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;
+  background:var(--color-primary-subtle);color:var(--color-primary-default);font-size:12px;
+}
+
+/* ---------- composer ---------- */
+.composer{flex:0 0 auto;padding:9px 12px 13px;background:var(--color-surface-card);border-top:1px solid var(--color-border-default)}
+.composer-row{display:flex;align-items:flex-end;gap:8px}
+.composer textarea{
+  flex:1;min-width:0;resize:none;font-family:inherit;
+  font-size:16px;                 /* below 16 and iOS zooms the page on focus */
+  line-height:1.65;padding:10px 13px;max-height:110px;
+  border:1px solid var(--color-border-default);border-radius:18px;background:var(--color-surface-background);color:var(--color-text-title);
+}
+.composer textarea:focus{outline:none;border-color:#C7CDFF;background:var(--color-surface-card)}
+.composer textarea:disabled{opacity:.6}
+.send,.stop{
+  flex:0 0 auto;width:42px;height:42px;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;color:#fff;
+}
+.send{background:linear-gradient(140deg,var(--color-primary-light),var(--color-primary-default))}
+.send:disabled{opacity:.32;cursor:default}
+.stop{background:#DC2626}
+.send svg,.stop svg{width:19px;height:19px}
+.meter{margin:8px 2px 0;font-size:10.5px;color:var(--color-text-muted);text-align:center}
+.meter b{color:var(--color-primary-default)}
+.meter.warn b{color:#B45309}
+.draft-tag{
+  display:inline-flex;align-items:center;gap:6px;margin:0 2px 8px;padding:4px 9px;
+  border-radius:99px;background:var(--color-primary-subtle);color:var(--color-primary-default);font-size:10.5px;font-weight:500;
+}
+.draft-tag svg{width:11px;height:11px}
+
+/* quota wall — today the site just drops a system line and leaves the box open */
+.wall{
+  margin:0 0 9px;padding:11px 13px;border-radius:13px;
+  background:#FEF2F2;border:1px solid #FECACA;
+}
+.wall h5{margin:0 0 3px;font-size:13px;font-weight:600;color:#991B1B}
+.wall p{margin:0 0 9px;font-size:11.5px;line-height:1.85;color:#B91C1C}
+.wall button{
+  width:100%;padding:9px;border:0;border-radius:10px;background:#B91C1C;color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+}
+
+/* ---------- drawer ---------- */
+.drawer{
+  position:absolute;inset-block:0;inset-inline-start:0;z-index:9;
+  width:84%;max-width:300px;background:var(--color-surface-card);
+  display:flex;flex-direction:column;
+  /* +100% parks it off the right edge — where inset-inline-start sits in
+     Persian. In English this one value becomes -100%; nothing else changes. */
+  transform:translateX(100%);
+  transition:transform .3s var(--ease);
+  box-shadow:0 0 40px rgba(8,12,28,.3);
+}
+.drawer.on{transform:none}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}
+.drawer-head h3{margin:0;flex:1;font-size:15px;font-weight:600;color:var(--color-text-title)}
+.drawer-head .iconbtn{background:var(--color-surface-background);color:var(--color-text-muted)}
+.newchat{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:0 12px 10px;padding:12px;border:0;border-radius:13px;
+  background:linear-gradient(140deg,var(--color-primary-light),var(--color-primary-default));color:#fff;
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  box-shadow:0 6px 16px -8px rgba(79,70,229,.9);
+}
+.newchat svg{width:16px;height:16px}
+.searchbox{margin:0 12px 8px;position:relative}
+.searchbox input{
+  width:100%;padding:9px 34px 9px 12px;border:1px solid var(--color-border-default);border-radius:11px;
+  background:var(--color-surface-background);font-family:inherit;font-size:12.5px;color:var(--color-text-title);
+}
+.searchbox input:focus{outline:none;border-color:#C7CDFF;background:var(--color-surface-card)}
+.searchbox svg{position:absolute;inset-inline-start:11px;top:10px;width:14px;height:14px;color:#B9BECC}
+.chat-list{flex:1;overflow-y:auto;padding:0 8px 12px}
+.list-head{padding:11px 8px 5px;font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--color-text-muted)}
+.chat-item{display:flex;align-items:center;gap:5px;padding:7px 8px;border-radius:11px}
+.chat-item:hover{background:var(--color-surface-background)}
+.chat-item.active{background:var(--color-primary-subtle)}
+.chat-item .name{flex:1;min-width:0;border:0;background:none;padding:0;cursor:pointer;font-family:inherit;text-align:start}
+.chat-item .n1{display:block;font-size:12.5px;color:var(--color-text-title);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The site's titles are the whole question cut at 70 chars, so the list reads
+   as a wall of near-identical sentences. Topic chip first, then the question. */
+.chat-item .n2{display:flex;align-items:center;gap:5px;margin-top:2px;font-size:10px;color:var(--color-text-muted)}
+.topic{padding:1px 6px;border-radius:5px;background:var(--color-primary-subtle);color:var(--color-primary-default);font-weight:600}
+.chat-item.active .topic{background:#DDE3FF}
+.chat-act{flex:0 0 auto;width:28px;height:28px;border:0;border-radius:8px;background:none;color:#B9BECC;cursor:pointer;display:grid;place-items:center}
+.chat-act:hover{background:var(--color-border-default);color:var(--color-text-body)}
+.chat-act svg{width:14px;height:14px}
+/* rename happens in place, exactly as the site does it — no system dialog */
+.rename-input{
+  flex:1;min-width:0;padding:5px 8px;border:1px solid var(--color-primary-default);border-radius:7px;
+  background:var(--color-surface-card);font-family:inherit;font-size:12.5px;color:var(--color-text-title);
+}
+.rename-input:focus{outline:none}
+.delbar{padding:7px 8px}
+.delbar p{margin:0 0 3px;font-size:12px;color:#B91C1C;font-weight:500}
+.delbar .keeps{margin:0 0 7px;font-size:10px;color:var(--color-text-muted);line-height:1.7}
+.delbar .row2{display:flex;gap:6px}
+.delbar button{flex:1;padding:6px;border-radius:8px;font-family:inherit;font-size:11.5px;cursor:pointer}
+.del-yes{border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-weight:600}
+.del-no{border:1px solid var(--color-border-default);background:var(--color-surface-card);color:var(--color-text-body)}
+.drawer-foot{padding:11px 16px;border-top:1px solid var(--color-border-default);font-size:10.5px;color:var(--color-text-muted);line-height:1.9}
+.drawer-foot b{color:var(--color-primary-default)}
+
+/* ---------- experimental notice ---------- */
+.lab-note{
+  flex:0 0 auto;display:flex;gap:8px;align-items:flex-start;
+  padding:8px 14px;background:#FFF8EC;border-bottom:1px solid #F6E3C4;
+  color:#8A5A12;font-size:11px;line-height:1.8;
+}
+.lab-note svg{width:14px;height:14px;flex:0 0 auto;margin-top:2px;color:#D08A1E}
+
+/* ---------- python sheet ---------- */
+.pysheet{
+  position:absolute;inset:0;z-index:12;display:none;flex-direction:column;
+  background:#0B1120;
+}
+.pysheet.on{display:flex}
+.py-head{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:13px 15px;
+  background:#141B2E;border-bottom:1px solid #243049;color:#E2E8F0;
+  font-size:14px;font-weight:600;
+}
+.py-head .x{margin-inline-start:auto;width:30px;height:30px;border:0;border-radius:9px;background:rgba(255,255,255,.07);color:#94A3B8;cursor:pointer;display:grid;place-items:center}
+.py-head .x svg{width:15px;height:15px}
+.py-body{flex:1;overflow-y:auto;min-height:0}
+.py-code{
+  direction:ltr;text-align:left;margin:0;padding:13px 15px;
+  color:#E2E8F0;background:#0B1120;border-bottom:1px solid #1B2440;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12px;line-height:1.65;overflow-x:auto;white-space:pre;
+}
+.py-label{padding:10px 15px 4px;font-size:10px;font-weight:600;letter-spacing:.06em;color:#475569;text-transform:uppercase}
+.py-out{
+  direction:ltr;text-align:left;margin:0;padding:0 15px 12px;
+  color:#A3E635;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;
+}
+.py-out.err{color:#F87171}
+.py-fig{margin:0 15px 12px;border-radius:8px;background:#fff;padding:8px}
+.py-fig svg{width:100%;height:auto;display:block}
+.py-foot{flex:0 0 auto;display:flex;gap:9px;padding:12px 15px;background:#141B2E;border-top:1px solid #243049}
+.py-foot button{flex:1;padding:11px;border-radius:11px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.py-run{border:0;background:#16A34A;color:#fff}
+.py-run:disabled{background:#243049;color:#64748B;cursor:wait}
+.py-cancel{border:1px solid #243049;background:transparent;color:#94A3B8;flex:0 0 auto;padding-inline:18px}
+
+/* the state the site has no equivalent of: this runs on the phone, not a server */
+.py-warn{margin:15px;padding:14px;border-radius:14px;background:#2A1F0B;border:1px solid #5A4212}
+.py-warn h5{margin:0 0 6px;font-size:13.5px;font-weight:700;color:#FBBF24;display:flex;align-items:center;gap:7px}
+.py-warn h5 svg{width:15px;height:15px}
+.py-warn p{margin:0 0 7px;font-size:11.5px;line-height:1.9;color:#D6BE8A}
+.py-warn ul{margin:0;padding-inline-start:17px;font-size:11.5px;line-height:1.9;color:#D6BE8A}
+.py-load{display:flex;align-items:center;gap:10px;padding:16px 15px;color:#94A3B8;font-size:12.5px}
+.py-load i{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 1.1s ease-in-out infinite}
+.py-load i:nth-child(2){animation-delay:.16s}
+.py-load i:nth-child(3){animation-delay:.32s}

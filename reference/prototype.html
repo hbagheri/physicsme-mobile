@@ -1,0 +1,1606 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>[hidden]{display:none!important}</style>
+<title>پروتوتایپ من فیزیکی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ink:#0B1026;
+  --ink-2:#141B3D;
+  --chalk:#E8ECF7;
+  --chalk-dim:rgba(232,236,247,.44);
+  --brand:#6C63FF;
+  --brand-deep:#4F46E5;
+  --amber:#F2B155;
+  --paper:#F7F8FB;
+  --card:#FFFFFF;
+  --title:#111827;
+  --body:#374151;
+  --muted:#6B7280;
+  --line:#E5E7EB;
+  --subtle:#EEF2FF;
+  --studio:#080C1C;
+  --studio-2:#101736;
+  --fx:cubic-bezier(.22,.9,.28,1);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1B2450 0%, rgba(27,36,80,0) 60%),
+    linear-gradient(180deg,var(--studio-2) 0%, var(--studio) 100%);
+  background-attachment:fixed;
+  color:var(--chalk);
+  font-family:Vazirmatn,system-ui,"Segoe UI",sans-serif;
+  direction:rtl;
+  padding:0 16px;
+  padding-block:32px 56px;
+  min-height:100%;
+}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:28px;align-items:center}
+
+/* ---------- page header ---------- */
+.eyebrow{
+  font-size:12px;letter-spacing:.14em;color:var(--amber);
+  text-transform:uppercase;font-weight:600;margin:0;
+}
+.h-title{
+  font-size:clamp(24px,5vw,34px);font-weight:700;margin:6px 0 0;
+  text-wrap:balance;text-align:center;line-height:1.35;
+}
+.h-sub{
+  margin:10px 0 0;color:var(--chalk-dim);font-size:14px;line-height:1.9;
+  max-width:52ch;text-align:center;
+}
+header.page{display:flex;flex-direction:column;align-items:center}
+
+/* ---------- phone ---------- */
+.stage{display:flex;flex-wrap:wrap;gap:36px;justify-content:center;align-items:flex-start;width:100%}
+.phone{
+  width:360px;height:800px;max-width:100%;
+  border-radius:34px;overflow:hidden;position:relative;
+  background:var(--ink);
+  box-shadow:0 0 0 9px #0d1228, 0 0 0 10px rgba(255,255,255,.07), 0 40px 90px -30px rgba(0,0,0,.9);
+  flex:0 0 auto;
+}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+
+/* ---------- chalkboard background (swap for the site image) ---------- */
+.board{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(90% 55% at 50% 12%, #23306B 0%, rgba(35,48,107,0) 70%),
+    linear-gradient(175deg,#182052 0%, #0B1026 62%, #080C1C 100%);
+}
+.board svg{position:absolute;inset:0;width:100%;height:100%}
+.formulas{
+  position:absolute;inset:0;pointer-events:none;
+  font-family:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  font-style:italic;color:rgba(232,236,247,.085);
+  user-select:none;
+}
+.formulas span{position:absolute;white-space:nowrap}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:relative;z-index:3;flex:0 0 auto;
+  min-height:56px;display:flex;align-items:center;gap:12px;
+  padding:0 16px;
+}
+.topbar.dark{color:var(--chalk)}
+.topbar.light{background:var(--card);border-bottom:1px solid var(--line);color:var(--title)}
+.crumb{font-size:12px;line-height:1.7;opacity:.72;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar.light .crumb{opacity:1;color:var(--muted)}
+.iconbtn{
+  width:36px;height:36px;flex:0 0 auto;border:0;border-radius:11px;cursor:pointer;
+  display:grid;place-items:center;background:rgba(255,255,255,.09);color:inherit;
+  transition:background .18s ease,transform .18s ease;
+}
+.topbar.light .iconbtn{background:var(--subtle);color:var(--brand-deep)}
+.iconbtn:hover{background:rgba(255,255,255,.18)}
+.topbar.light .iconbtn:hover{background:#E0E7FF}
+.iconbtn:active{transform:scale(.93)}
+.iconbtn svg{width:19px;height:19px}
+.iconbtn.ai{background:linear-gradient(140deg,var(--brand) 0%,var(--brand-deep) 100%);color:#fff;box-shadow:0 4px 14px -4px rgba(108,99,255,.9)}
+.screen-title{font-size:16px;font-weight:600;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- circle grid ---------- */
+.gridwrap{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 20px 56px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:28px 18px;justify-items:center}
+.grid.one{grid-template-columns:1fr}
+.grid.two{grid-template-columns:1fr 1fr}
+
+.orb{
+  background:none;border:0;padding:0;cursor:pointer;color:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:11px;width:100%;
+  font-family:inherit;
+  opacity:0;transform:translateY(16px) scale(.86);
+  transition:opacity .42s var(--fx),transform .42s var(--fx);
+}
+.orb.in{opacity:1;transform:none}
+.orb.out{opacity:0;transform:translateY(-18px) scale(.8)}
+.disc{
+  width:104px;height:104px;border-radius:50%;position:relative;
+  display:grid;place-items:center;
+  background:radial-gradient(120% 120% at 32% 22%, rgba(255,255,255,.2) 0%, rgba(255,255,255,.05) 45%, rgba(255,255,255,.02) 100%);
+  border:1px solid rgba(232,236,247,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 16px 34px -20px rgba(0,0,0,.95);
+  transition:transform .3s var(--fx),border-color .3s ease,box-shadow .3s ease;
+}
+.orb:hover .disc{transform:translateY(-4px) scale(1.04);border-color:rgba(232,236,247,.45)}
+.orb:active .disc{transform:scale(.96)}
+.disc svg{width:50px;height:50px;color:var(--chalk)}
+.disc::after{
+  content:"";position:absolute;inset:-7px;border-radius:50%;
+  border:1px dashed rgba(232,236,247,.16);
+}
+.orb.accent .disc{
+  background:radial-gradient(120% 120% at 32% 22%, #8B84FF 0%, var(--brand) 42%, var(--brand-deep) 100%);
+  border-color:rgba(255,255,255,.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 18px 40px -18px rgba(108,99,255,.85);
+}
+.orb.accent .disc::after{border-color:rgba(255,255,255,.3);animation:spin 26s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orb .cap{font-size:13.5px;font-weight:500;line-height:1.6;text-align:center;color:var(--chalk)}
+
+/* ---------- copyright banner ---------- */
+.banner{
+  position:relative;z-index:2;margin:4px 16px 0;padding:12px 14px;
+  border-radius:14px;background:rgba(242,177,85,.12);
+  border:1px solid rgba(242,177,85,.32);
+  color:#F7D9A8;font-size:11.5px;line-height:1.95;
+  display:flex;gap:10px;align-items:flex-start;
+  opacity:0;transform:translateY(-8px);transition:opacity .4s var(--fx) .12s,transform .4s var(--fx) .12s;
+}
+.banner.in{opacity:1;transform:none}
+.banner svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:var(--amber)}
+
+/* ---------- light list screens ---------- */
+.light-body{background:var(--paper);flex:1;overflow-y:auto;padding:12px 0 24px}
+.row{
+  width:100%;display:flex;align-items:center;gap:13px;
+  background:var(--card);border:0;border-bottom:1px solid var(--line);
+  padding:13px 16px;cursor:pointer;text-align:right;font-family:inherit;
+  transition:background .16s ease;
+}
+.row:hover{background:var(--subtle)}
+.row:active{background:#E0E7FF}
+.thumb{
+  width:46px;height:46px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  background:linear-gradient(140deg,#EEF2FF,#DDE3FF);color:var(--brand-deep);
+  font-weight:600;font-size:14px;
+}
+.thumb svg{width:22px;height:22px}
+.row .txt{flex:1;min-width:0}
+.row .t1{font-size:14.5px;font-weight:500;color:var(--title);line-height:1.6}
+.row .t2{font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:1px}
+.row .chev{color:#C3C8D4;flex:0 0 auto}
+.row .chev svg{width:16px;height:16px}
+.group-label{
+  font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);
+  padding:18px 16px 7px;
+}
+.row.band .thumb{background:linear-gradient(140deg,#FFF3E0,#FFE4BF);color:#B26B12}
+
+/* ---------- reader ---------- */
+.reader{background:var(--card);flex:1;overflow-y:auto;padding:18px 16px 40px}
+.reader h2{font-size:18px;font-weight:600;color:var(--title);margin:0 0 4px;line-height:1.6}
+.reader .meta{font-size:11.5px;color:var(--muted);margin:0 0 18px}
+.para{position:relative;padding-left:30px;margin:0 0 14px}
+.para p{
+  margin:0;font-size:15px;line-height:1.85;color:var(--body);
+  border-radius:8px;padding:2px 4px;margin-right:-4px;
+  transition:background .2s ease;
+}
+.para:hover p{background:var(--subtle)}
+.ask{
+  position:absolute;left:0;top:3px;width:24px;height:24px;border-radius:8px;
+  border:1px solid var(--line);background:var(--card);color:#A8AFC0;
+  cursor:pointer;display:grid;place-items:center;font-family:inherit;
+  font-size:13px;font-weight:600;line-height:1;
+  transition:all .18s ease;
+}
+.para:hover .ask{color:var(--brand-deep);border-color:#C7CDFF;background:var(--subtle)}
+.ask:active{transform:scale(.9)}
+.formula{
+  display:block;text-align:center;font-family:"Iowan Old Style",Georgia,serif;
+  font-style:italic;font-size:17px;color:var(--title);
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:14px;margin:16px 0;direction:ltr;
+}
+
+/* ---------- sheet ---------- */
+.scrim{position:absolute;inset:0;background:rgba(8,12,28,.5);z-index:8;opacity:0;pointer-events:none;transition:opacity .28s ease}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:9;
+  background:var(--card);border-radius:22px 22px 0 0;padding:8px 16px 22px;
+  transform:translateY(102%);transition:transform .34s var(--fx);
+}
+.sheet.on{transform:none}
+.handle{width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px}
+.sheet h3{margin:0 0 3px;font-size:15px;font-weight:600;color:var(--title)}
+.sheet .q{margin:0 0 16px;font-size:12.5px;color:var(--muted);line-height:1.8}
+.opt{
+  width:100%;display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:9px;
+  border-radius:14px;border:1px solid var(--line);background:var(--card);
+  cursor:pointer;text-align:right;font-family:inherit;transition:all .18s ease;
+}
+.opt:hover{border-color:#C7CDFF;background:var(--subtle)}
+.opt .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto}
+.opt.ai .ico{background:linear-gradient(140deg,var(--brand),var(--brand-deep));color:#fff}
+.opt.tutor .ico{background:linear-gradient(140deg,#FFF3E0,#FFDFB0);color:#B26B12}
+.opt .ico svg{width:18px;height:18px}
+.opt .ot1{font-size:14px;font-weight:500;color:var(--title);line-height:1.6}
+.opt .ot2{font-size:11px;color:var(--muted);line-height:1.7}
+.quota{
+  margin-top:4px;font-size:11px;color:var(--muted);text-align:center;line-height:1.8;
+}
+.quota b{color:var(--brand-deep);font-weight:600}
+
+/* ---------- chat ---------- */
+.chat-wrap{flex:1;display:flex;flex-direction:column;background:var(--paper);min-height:0}
+.chat-scroll{flex:1;overflow-y:auto;padding:14px 14px 10px;display:flex;flex-direction:column;gap:14px}
+
+/* token badge — the header span that does nothing today becomes a real button */
+.tokbadge{
+  flex:0 0 auto;display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:99px;border:1px solid transparent;
+  font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;
+}
+.tokbadge svg{width:12px;height:12px}
+.tokbadge.ok  {background:var(--subtle);color:var(--brand-deep);border-color:#DDE3FF}
+.tokbadge.low {background:#FFF8EC;color:#8A5A12;border-color:#F6E3C4}
+.tokbadge.out {background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.tokbadge.debt{background:#B91C1C;color:#fff;border-color:#B91C1C}
+
+/* ---------- messages ---------- */
+.msg{display:flex;flex-direction:column;gap:5px;max-width:88%}
+.msg.me{align-self:flex-start}          /* RTL: user sits at the start edge, matching the site */
+.msg.ai{align-self:flex-end;max-width:94%}
+
+.bubble{padding:11px 14px;border-radius:16px;font-size:14.5px;line-height:1.75}
+.msg.me .bubble{background:var(--brand-deep);color:#fff;border-end-start-radius:5px;white-space:pre-wrap}
+.msg.ai .bubble{background:var(--card);color:var(--body);border:1px solid var(--line);border-end-end-radius:5px}
+.msg.err .bubble{background:#FEF2F2;border-color:#FECACA;color:#991B1B}
+
+/* markdown inside an answer */
+.bubble h3{margin:14px 0 6px;font-size:15.5px;font-weight:700;color:var(--brand-deep);border-bottom:1px solid var(--line);padding-bottom:4px;line-height:1.5}
+.bubble h3:first-child{margin-top:0}
+.bubble h4{margin:12px 0 5px;font-size:14px;font-weight:700;color:var(--title)}
+.bubble p{margin:0 0 9px}
+.bubble p:last-child{margin-bottom:0}
+.bubble ol,.bubble ul{margin:6px 0 10px;padding-inline-start:20px}
+.bubble li{margin-bottom:4px}
+.bubble strong{font-weight:700;color:var(--title)}
+.bubble blockquote{
+  margin:9px 0;padding:7px 11px;border-radius:0 8px 8px 0;
+  border-inline-start:3px solid var(--brand-deep);
+  background:var(--subtle);color:var(--brand-deep);font-size:13.5px;
+}
+.bubble .ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.bubble code.inl{
+  background:var(--paper);border:1px solid var(--line);color:var(--brand-deep);
+  padding:1px 5px;border-radius:4px;font-size:.88em;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  direction:ltr;display:inline-block;
+}
+
+/* formulas and code stay LTR inside an RTL bubble */
+.mathline{
+  direction:ltr;text-align:center;overflow-x:auto;
+  font-family:"Iowan Old Style",Georgia,serif;font-style:italic;font-size:16px;
+  color:var(--title);padding:10px 8px;margin:10px 0;
+  background:var(--paper);border:1px solid var(--line);border-radius:10px;
+}
+
+.codewrap{position:relative;margin:10px 0}
+.codewrap pre{
+  direction:ltr;text-align:left;margin:0;
+  background:#0F172A;color:#E2E8F0;border-radius:10px;
+  padding:34px 14px 14px;overflow-x:auto;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12.5px;line-height:1.65;
+}
+.codebar{position:absolute;top:7px;inset-inline-end:8px;display:flex;gap:6px;direction:ltr}
+.codebtn{
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.1);
+  color:#94A3B8;border-radius:6px;padding:3px 9px;cursor:pointer;
+  font-family:inherit;font-size:10.5px;
+}
+.codebtn:hover{background:rgba(255,255,255,.2);color:#fff}
+.codebtn.run{background:rgba(22,163,74,.16);border-color:rgba(74,222,128,.28);color:#4ADE80}
+.codebtn.copied{background:#059669;border-color:#059669;color:#fff}
+
+/* streaming */
+.bubble.typing::after{content:"▋";color:var(--brand-deep);animation:cursor .75s steps(1) infinite;margin-inline-start:2px}
+@keyframes cursor{50%{opacity:0}}
+.status{
+  align-self:flex-end;display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--muted);padding:0 4px;
+}
+.status i{width:5px;height:5px;border-radius:50%;background:var(--brand);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* the row under an answer: where it came from, and what you can do with it */
+.msg-foot{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:0 3px}
+.srcbadge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:8px;font-size:10.5px;border:1px solid;
+}
+.srcbadge.site    {color:#059669;background:#ECFDF5;border-color:#A7F3D0}
+.srcbadge.external{color:#2563EB;background:#EFF6FF;border-color:#BFDBFE}
+.srcbadge.general {color:#6B7280;background:#F9FAFB;border-color:#E5E7EB}
+.srcbadge.code    {color:#B45309;background:#FFFBEB;border-color:#FDE68A}
+.msg-acts{display:flex;gap:2px;margin-inline-start:auto}
+.act{
+  width:28px;height:28px;border:0;border-radius:8px;background:none;color:#A8AFC0;
+  cursor:pointer;display:grid;place-items:center;font-size:13px;line-height:1;
+}
+.act:hover{background:var(--line);color:var(--body)}
+.act.on{color:var(--brand-deep);background:var(--subtle)}
+.act svg{width:14px;height:14px}
+.stopped{
+  align-self:flex-end;font-size:11px;color:var(--muted);
+  background:var(--line);padding:3px 10px;border-radius:99px;
+}
+.retry{
+  display:inline-flex;align-items:center;gap:6px;margin-top:2px;
+  padding:6px 12px;border:1px solid #FECACA;border-radius:10px;
+  background:var(--card);color:#B91C1C;font-family:inherit;font-size:12px;cursor:pointer;
+}
+.retry svg{width:13px;height:13px}
+
+/* empty state — the biggest gap on the site today */
+.chat-empty{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;padding:20px;text-align:center}
+.chat-empty .glyph{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,#8B84FF,var(--brand-deep));color:#fff}
+.chat-empty .glyph svg{width:32px;height:32px}
+.chat-empty h3{margin:0;font-size:15.5px;font-weight:600;color:var(--title)}
+.chat-empty p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.9;max-width:32ch}
+.seeds{display:flex;flex-direction:column;gap:7px;width:100%;max-width:290px}
+.seed{
+  display:flex;align-items:center;gap:9px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;background:var(--card);
+  font-family:inherit;font-size:12.5px;color:var(--body);text-align:start;cursor:pointer;
+}
+.seed:hover{border-color:#C7CDFF;background:var(--subtle)}
+.seed .k{
+  flex:0 0 auto;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;
+  background:var(--subtle);color:var(--brand-deep);font-size:12px;
+}
+
+/* ---------- composer ---------- */
+.composer{flex:0 0 auto;padding:9px 12px 13px;background:var(--card);border-top:1px solid var(--line)}
+.composer-row{display:flex;align-items:flex-end;gap:8px}
+.composer textarea{
+  flex:1;min-width:0;resize:none;font-family:inherit;
+  font-size:16px;                 /* below 16 and iOS zooms the page on focus */
+  line-height:1.65;padding:10px 13px;max-height:110px;
+  border:1px solid var(--line);border-radius:18px;background:var(--paper);color:var(--title);
+}
+.composer textarea:focus{outline:none;border-color:#C7CDFF;background:var(--card)}
+.composer textarea:disabled{opacity:.6}
+.send,.stop{
+  flex:0 0 auto;width:42px;height:42px;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;color:#fff;
+}
+.send{background:linear-gradient(140deg,var(--brand),var(--brand-deep))}
+.send:disabled{opacity:.32;cursor:default}
+.stop{background:#DC2626}
+.send svg,.stop svg{width:19px;height:19px}
+.meter{margin:8px 2px 0;font-size:10.5px;color:var(--muted);text-align:center}
+.meter b{color:var(--brand-deep)}
+.meter.warn b{color:#B45309}
+.draft-tag{
+  display:inline-flex;align-items:center;gap:6px;margin:0 2px 8px;padding:4px 9px;
+  border-radius:99px;background:var(--subtle);color:var(--brand-deep);font-size:10.5px;font-weight:500;
+}
+.draft-tag svg{width:11px;height:11px}
+
+/* quota wall — today the site just drops a system line and leaves the box open */
+.wall{
+  margin:0 0 9px;padding:11px 13px;border-radius:13px;
+  background:#FEF2F2;border:1px solid #FECACA;
+}
+.wall h5{margin:0 0 3px;font-size:13px;font-weight:600;color:#991B1B}
+.wall p{margin:0 0 9px;font-size:11.5px;line-height:1.85;color:#B91C1C}
+.wall button{
+  width:100%;padding:9px;border:0;border-radius:10px;background:#B91C1C;color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+}
+
+/* ---------- drawer ---------- */
+.drawer{
+  position:absolute;inset-block:0;inset-inline-start:0;z-index:9;
+  width:84%;max-width:300px;background:var(--card);
+  display:flex;flex-direction:column;
+  /* +100% parks it off the right edge — where inset-inline-start sits in
+     Persian. In English this one value becomes -100%; nothing else changes. */
+  transform:translateX(100%);
+  transition:transform .3s var(--fx);
+  box-shadow:0 0 40px rgba(8,12,28,.3);
+}
+.drawer.on{transform:none}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}
+.drawer-head h3{margin:0;flex:1;font-size:15px;font-weight:600;color:var(--title)}
+.drawer-head .iconbtn{background:var(--paper);color:var(--muted)}
+.newchat{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:0 12px 10px;padding:12px;border:0;border-radius:13px;
+  background:linear-gradient(140deg,var(--brand),var(--brand-deep));color:#fff;
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  box-shadow:0 6px 16px -8px rgba(79,70,229,.9);
+}
+.newchat svg{width:16px;height:16px}
+.searchbox{margin:0 12px 8px;position:relative}
+.searchbox input{
+  width:100%;padding:9px 34px 9px 12px;border:1px solid var(--line);border-radius:11px;
+  background:var(--paper);font-family:inherit;font-size:12.5px;color:var(--title);
+}
+.searchbox input:focus{outline:none;border-color:#C7CDFF;background:var(--card)}
+.searchbox svg{position:absolute;inset-inline-start:11px;top:10px;width:14px;height:14px;color:#B9BECC}
+.chat-list{flex:1;overflow-y:auto;padding:0 8px 12px}
+.list-head{padding:11px 8px 5px;font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--muted)}
+.chat-item{display:flex;align-items:center;gap:5px;padding:7px 8px;border-radius:11px}
+.chat-item:hover{background:var(--paper)}
+.chat-item.active{background:var(--subtle)}
+.chat-item .name{flex:1;min-width:0;border:0;background:none;padding:0;cursor:pointer;font-family:inherit;text-align:start}
+.chat-item .n1{display:block;font-size:12.5px;color:var(--title);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The site's titles are the whole question cut at 70 chars, so the list reads
+   as a wall of near-identical sentences. Topic chip first, then the question. */
+.chat-item .n2{display:flex;align-items:center;gap:5px;margin-top:2px;font-size:10px;color:var(--muted)}
+.topic{padding:1px 6px;border-radius:5px;background:var(--subtle);color:var(--brand-deep);font-weight:600}
+.chat-item.active .topic{background:#DDE3FF}
+.chat-act{flex:0 0 auto;width:28px;height:28px;border:0;border-radius:8px;background:none;color:#B9BECC;cursor:pointer;display:grid;place-items:center}
+.chat-act:hover{background:var(--line);color:var(--body)}
+.chat-act svg{width:14px;height:14px}
+/* rename happens in place, exactly as the site does it — no system dialog */
+.rename-input{
+  flex:1;min-width:0;padding:5px 8px;border:1px solid var(--brand-deep);border-radius:7px;
+  background:var(--card);font-family:inherit;font-size:12.5px;color:var(--title);
+}
+.rename-input:focus{outline:none}
+.delbar{padding:7px 8px}
+.delbar p{margin:0 0 3px;font-size:12px;color:#B91C1C;font-weight:500}
+.delbar .keeps{margin:0 0 7px;font-size:10px;color:var(--muted);line-height:1.7}
+.delbar .row2{display:flex;gap:6px}
+.delbar button{flex:1;padding:6px;border-radius:8px;font-family:inherit;font-size:11.5px;cursor:pointer}
+.del-yes{border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-weight:600}
+.del-no{border:1px solid var(--line);background:var(--card);color:var(--body)}
+.drawer-foot{padding:11px 16px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);line-height:1.9}
+.drawer-foot b{color:var(--brand-deep)}
+
+/* ---------- experimental notice ---------- */
+.lab-note{
+  flex:0 0 auto;display:flex;gap:8px;align-items:flex-start;
+  padding:8px 14px;background:#FFF8EC;border-bottom:1px solid #F6E3C4;
+  color:#8A5A12;font-size:11px;line-height:1.8;
+}
+.lab-note svg{width:14px;height:14px;flex:0 0 auto;margin-top:2px;color:#D08A1E}
+
+/* ---------- python sheet ---------- */
+.pysheet{
+  position:absolute;inset:0;z-index:12;display:none;flex-direction:column;
+  background:#0B1120;
+}
+.pysheet.on{display:flex}
+.py-head{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:13px 15px;
+  background:#141B2E;border-bottom:1px solid #243049;color:#E2E8F0;
+  font-size:14px;font-weight:600;
+}
+.py-head .x{margin-inline-start:auto;width:30px;height:30px;border:0;border-radius:9px;background:rgba(255,255,255,.07);color:#94A3B8;cursor:pointer;display:grid;place-items:center}
+.py-head .x svg{width:15px;height:15px}
+.py-body{flex:1;overflow-y:auto;min-height:0}
+.py-code{
+  direction:ltr;text-align:left;margin:0;padding:13px 15px;
+  color:#E2E8F0;background:#0B1120;border-bottom:1px solid #1B2440;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12px;line-height:1.65;overflow-x:auto;white-space:pre;
+}
+.py-label{padding:10px 15px 4px;font-size:10px;font-weight:600;letter-spacing:.06em;color:#475569;text-transform:uppercase}
+.py-out{
+  direction:ltr;text-align:left;margin:0;padding:0 15px 12px;
+  color:#A3E635;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;
+}
+.py-out.err{color:#F87171}
+.py-fig{margin:0 15px 12px;border-radius:8px;background:#fff;padding:8px}
+.py-fig svg{width:100%;height:auto;display:block}
+.py-foot{flex:0 0 auto;display:flex;gap:9px;padding:12px 15px;background:#141B2E;border-top:1px solid #243049}
+.py-foot button{flex:1;padding:11px;border-radius:11px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.py-run{border:0;background:#16A34A;color:#fff}
+.py-run:disabled{background:#243049;color:#64748B;cursor:wait}
+.py-cancel{border:1px solid #243049;background:transparent;color:#94A3B8;flex:0 0 auto;padding-inline:18px}
+
+/* the state the site has no equivalent of: this runs on the phone, not a server */
+.py-warn{margin:15px;padding:14px;border-radius:14px;background:#2A1F0B;border:1px solid #5A4212}
+.py-warn h5{margin:0 0 6px;font-size:13.5px;font-weight:700;color:#FBBF24;display:flex;align-items:center;gap:7px}
+.py-warn h5 svg{width:15px;height:15px}
+.py-warn p{margin:0 0 7px;font-size:11.5px;line-height:1.9;color:#D6BE8A}
+.py-warn ul{margin:0;padding-inline-start:17px;font-size:11.5px;line-height:1.9;color:#D6BE8A}
+.py-load{display:flex;align-items:center;gap:10px;padding:16px 15px;color:#94A3B8;font-size:12.5px}
+.py-load i{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 1.1s ease-in-out infinite}
+.py-load i:nth-child(2){animation-delay:.16s}
+.py-load i:nth-child(3){animation-delay:.32s}
+
+/* ---------- scenario switcher (prototype chrome) ---------- */
+.scn{border:1px solid rgba(232,236,247,.14);border-radius:14px;padding:14px}
+.scn h4{margin:0 0 4px;font-size:13.5px;font-weight:600;color:var(--amber)}
+.scn p{margin:0 0 11px;font-size:12px;color:var(--chalk-dim)}
+.scn-grid{display:flex;flex-wrap:wrap;gap:6px}
+.scn-grid button{
+  padding:6px 11px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:11.5px;
+  border:1px solid rgba(232,236,247,.18);background:rgba(232,236,247,.05);color:var(--chalk-dim);
+  transition:all .16s ease;
+}
+.scn-grid button:hover{border-color:rgba(232,236,247,.4);color:var(--chalk)}
+.scn-grid button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+/* ---------- side notes ---------- */
+.notes{
+  flex:1 1 300px;max-width:400px;display:flex;flex-direction:column;gap:14px;
+  padding-top:8px;
+}
+.note{
+  border-right:2px solid var(--brand);padding:2px 14px 2px 0;
+}
+.note h4{margin:0 0 5px;font-size:13.5px;font-weight:600;color:var(--chalk)}
+.note p{margin:0;font-size:12.5px;line-height:1.95;color:var(--chalk-dim)}
+.note code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+  background:rgba(108,99,255,.18);color:#C7C3FF;padding:1px 5px;border-radius:5px;
+}
+.swapnote{border-right-color:var(--amber)}
+.swapnote h4{color:var(--amber)}
+
+@media (max-width:820px){
+  .notes{max-width:none;flex-basis:100%;border-top:1px solid rgba(232,236,247,.12);padding-top:22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+
+<div class="wrap">
+  <header class="page">
+    <p class="eyebrow">Prototype · v0.1</p>
+    <h1 class="h-title">من فیزیکی — مسیر ورود و خواندن</h1>
+    <p class="h-sub">روی دایره‌ها کلیک کن تا گذار لایه‌ها را ببینی. در صفحهٔ متن، علامت <b>؟</b> کنار هر پاراگراف سؤال را با متنِ همان بند به چت می‌برد. در چت، دکمهٔ <b>☰</b> فهرست گفتگوها را باز می‌کند.</p>
+  </header>
+
+  <div class="stage">
+    <div class="phone" id="phone">
+
+      <!-- ===== circle screen ===== -->
+      <section class="screen on" id="s-orbs">
+        <div class="board">
+          <svg viewBox="0 0 360 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <ellipse cx="180" cy="150" rx="150" ry="52" fill="none" stroke="rgba(232,236,247,.10)" stroke-width="1"/>
+            <ellipse cx="180" cy="150" rx="150" ry="52" fill="none" stroke="rgba(232,236,247,.07)" stroke-width="1" transform="rotate(58 180 150)"/>
+            <ellipse cx="180" cy="150" rx="150" ry="52" fill="none" stroke="rgba(232,236,247,.07)" stroke-width="1" transform="rotate(-58 180 150)"/>
+            <circle cx="180" cy="150" r="5" fill="rgba(242,177,85,.5)"/>
+            <path d="M296 612c0-9 7-16 15-16s15 7 15 16-7 20-15 20-15-11-15-20z" fill="rgba(242,177,85,.16)"/>
+            <path d="M311 596c1-6 5-10 10-11" stroke="rgba(232,236,247,.2)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            <path d="M311 300 Q 314 440 311 592" stroke="rgba(242,177,85,.18)" stroke-width="1" stroke-dasharray="3 7" fill="none"/>
+            <circle cx="52" cy="686" r="1.4" fill="rgba(232,236,247,.35)"/>
+            <circle cx="118" cy="742" r="1" fill="rgba(232,236,247,.25)"/>
+            <circle cx="286" cy="88" r="1.2" fill="rgba(232,236,247,.3)"/>
+            <circle cx="64" cy="112" r="1" fill="rgba(232,236,247,.2)"/>
+          </svg>
+          <div class="formulas" aria-hidden="true">
+            <span style="top:72px;right:22px;font-size:15px">E = mc²</span>
+            <span style="top:236px;left:18px;font-size:13px">F = ma</span>
+            <span style="top:470px;right:16px;font-size:12px">λ = h / p</span>
+            <span style="top:560px;left:26px;font-size:14px">∇·E = ρ/ε₀</span>
+            <span style="top:700px;right:30px;font-size:12px">S = k log W</span>
+            <span style="top:392px;left:70px;font-size:11px">pV = nRT</span>
+          </div>
+        </div>
+
+        <div class="topbar dark">
+          <button class="iconbtn" id="orb-back" hidden aria-label="بازگشت">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <span class="crumb" id="orb-crumb">من فیزیکی</span>
+          <button class="iconbtn ai" id="orb-ai" hidden aria-label="دستیار هوش مصنوعی">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+          </button>
+        </div>
+
+        <div class="banner" id="cr-banner" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          <span>به‌دلیل محدودیت‌های کپی‌رایت، به‌جای اصل کتاب‌ها جزوه‌ای بر پایهٔ آن‌ها آمده است. پرسش‌ها تا حد ممکن به سؤالات اصلی نزدیک‌اند، اما حق نشر رعایت شده.</span>
+        </div>
+
+        <div class="gridwrap">
+          <div class="grid" id="grid"></div>
+        </div>
+      </section>
+
+      <!-- ===== chapters ===== -->
+      <section class="screen" id="s-chapters">
+        <div class="topbar light">
+          <button class="iconbtn" data-back="s-orbs" aria-label="بازگشت">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <div style="flex:1;min-width:0">
+            <div class="screen-title">فصل‌ها</div>
+            <div class="crumb">دبیرستان ← ریاضی ← پایهٔ یازدهم</div>
+          </div>
+          <button class="iconbtn ai" data-sheet="ai" aria-label="دستیار هوش مصنوعی">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+          </button>
+        </div>
+        <div class="light-body" id="chapter-list"></div>
+      </section>
+
+      <!-- ===== sections ===== -->
+      <section class="screen" id="s-sections">
+        <div class="topbar light">
+          <button class="iconbtn" data-back="s-chapters" aria-label="بازگشت">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <div style="flex:1;min-width:0">
+            <div class="screen-title">الکتریسیتهٔ ساکن</div>
+            <div class="crumb">یازدهم ← فصل ۱</div>
+          </div>
+          <button class="iconbtn ai" data-sheet="ai" aria-label="دستیار هوش مصنوعی">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+          </button>
+        </div>
+        <div class="light-body" id="section-list"></div>
+      </section>
+
+      <!-- ===== reader ===== -->
+      <section class="screen" id="s-reader">
+        <div class="topbar light">
+          <button class="iconbtn" data-back="s-sections" aria-label="بازگشت">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <div style="flex:1;min-width:0">
+            <div class="screen-title">بار الکتریکی</div>
+            <div class="crumb">فصل ۱ ← بند ۱</div>
+          </div>
+          <button class="iconbtn ai" data-sheet="ai" aria-label="دستیار هوش مصنوعی">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+          </button>
+        </div>
+        <div class="reader">
+          <h2>بار الکتریکی</h2>
+          <p class="meta">فیزیک یازدهم · فصل ۱ · بند ۱ · حدود ۶ دقیقه</p>
+
+          <div class="para">
+            <button class="ask" data-ask="۱" aria-label="پرسش دربارهٔ این پاراگراف">؟</button>
+            <p>اگر میله‌ای پلاستیکی را با پارچه‌ای پشمی بمالیم، میله می‌تواند تکه‌های ریز کاغذ را به خود جذب کند. این اثر ساده که از زمان یونانیان باستان شناخته شده بود، نخستین نشانه از وجود کمیتی به نام <b>بار الکتریکی</b> است.</p>
+          </div>
+
+          <div class="para">
+            <button class="ask" data-ask="۲" aria-label="پرسش دربارهٔ این پاراگراف">؟</button>
+            <p>بار الکتریکی دو نوع دارد که آن‌ها را مثبت و منفی می‌نامیم. بارهای هم‌نام یکدیگر را می‌رانند و بارهای ناهم‌نام یکدیگر را می‌ربایند. این نام‌گذاری قراردادی است و از فرانکلین به یادگار مانده؛ هیچ چیز ذاتاً «مثبت» در پروتون وجود ندارد.</p>
+          </div>
+
+          <span class="formula">F = k · q₁q₂ / r²</span>
+
+          <div class="para">
+            <button class="ask" data-ask="۳" aria-label="پرسش دربارهٔ این پاراگراف">؟</button>
+            <p>نیروی میان دو بار نقطه‌ای با حاصل‌ضرب اندازهٔ بارها نسبت مستقیم و با مربع فاصلهٔ میان آن‌ها نسبت وارون دارد. ثابت کولن در خلأ برابر ۸٫۹۹ × ۱۰⁹ نیوتن‌متر مربع بر کولن مربع است.</p>
+          </div>
+
+          <div class="para">
+            <button class="ask" data-ask="۴" aria-label="پرسش دربارهٔ این پاراگراف">؟</button>
+            <p>توجه کن که این رابطه تنها برای بارهای نقطه‌ای یا کره‌های باردار یکنواخت اعتبار دارد. برای توزیع‌های پیوستهٔ بار باید به انتگرال‌گیری روی عنصرهای بار روی آوریم — موضوعی که در بند سوم به آن می‌پردازیم.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== chat ===== -->
+      <section class="screen" id="s-chat">
+        <div class="topbar light">
+          <button class="iconbtn" id="menu-btn" aria-label="گفتگوها">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div style="flex:1;min-width:0">
+            <div class="screen-title" id="chat-title">گفتگوی جدید</div>
+            <div class="crumb" id="chat-sub">دستیار من فیزیکی</div>
+          </div>
+          <button class="tokbadge ok" id="tokbadge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5V7a1.6 1.6 0 0 1 1.6-1.6h14.8A1.6 1.6 0 0 1 21 7v2.5a2.5 2.5 0 0 0 0 5V17a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M14 6v12"/></svg>
+            <span id="tokval">۹۸٬۹۵۷</span>
+          </button>
+          <button class="iconbtn" id="chat-close" aria-label="بستن">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <div class="chat-wrap">
+          <div class="lab-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v5M12 17.5v.01"/><path d="M10.3 3.9 2.4 17.6A1.9 1.9 0 0 0 4 20.5h16a1.9 1.9 0 0 0 1.6-2.9L13.7 3.9a1.9 1.9 0 0 0-3.4 0z"/></svg>
+            <span id="lab-text">نسخهٔ آزمایشی — دستیار هنوز در حال آموزش است. به پاسخ‌ها کاملاً اعتماد نکن.</span>
+          </div>
+
+          <div class="chat-scroll" id="chat-scroll"></div>
+
+          <div class="composer">
+            <div id="wall-slot"></div>
+            <div id="draft-tag-slot"></div>
+            <div class="composer-row">
+              <textarea id="composer" rows="1" placeholder="سؤالت را بنویس…"></textarea>
+              <button class="send" id="send" disabled aria-label="ارسال">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+              </button>
+              <button class="stop" id="stop" hidden aria-label="توقف">
+                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+              </button>
+            </div>
+            <p class="meter" id="meter"></p>
+          </div>
+        </div>
+
+        <div class="drawer" id="drawer">
+          <div class="drawer-head">
+            <h3>گفتگوها</h3>
+            <button class="iconbtn" id="drawer-close" aria-label="بستن">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <button class="newchat" id="new-chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            گفتگوی جدید
+          </button>
+          <div class="searchbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="chat-search" placeholder="جست‌وجو در گفتگوها">
+          </div>
+          <div class="chat-list" id="chat-list"></div>
+          <div class="drawer-foot">
+            سهمیهٔ امروز: <b id="drawer-quota">۹۸٬۹۵۷ توکن</b><br>
+            <span id="drawer-model">پاسخ‌دهنده: Groq · qwen3.8-27b</span>
+          </div>
+        </div>
+        <div class="scrim" id="drawer-scrim"></div>
+
+        <!-- python runner -->
+        <div class="pysheet" id="pysheet">
+          <div class="py-head">
+            <span>🐍 اجرای کد Python</span>
+            <button class="x" id="py-close" aria-label="بستن">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="py-body" id="py-body"></div>
+          <div class="py-foot" id="py-foot"></div>
+        </div>
+      </section>
+
+      <!-- ===== sheet ===== -->
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" id="sheet">
+        <div class="handle"></div>
+        <h3 id="sheet-title">این پاراگراف را نفهمیدم</h3>
+        <p class="q" id="sheet-q">پاراگراف ۱ از بند «بار الکتریکی» انتخاب شده است.</p>
+        <button class="opt ai">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg></span>
+          <span><span class="ot1">از دستیار بپرس</span><span class="ot2">پاسخ فوری، از سهمیهٔ توکن تو کم می‌شود</span></span>
+        </button>
+        <button class="opt tutor">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span><span class="ot1">برای استاد بفرست</span><span class="ot2">پاسخ در تلگرام به تو اطلاع داده می‌شود</span></span>
+        </button>
+        <p class="quota">سهمیهٔ امروز: <b>۱۲ پرسش</b> از ۲۰ باقی مانده</p>
+      </div>
+    </div>
+
+    <aside class="notes">
+      <div class="scn">
+        <h4>حالت‌های صفحهٔ چت</h4>
+        <p>هر کدام را بزن تا روی گوشی ببینی.</p>
+        <div class="scn-grid">
+          <button data-scn="empty">خالی</button>
+          <button data-scn="normal">پاسخ مارک‌داون</button>
+          <button data-scn="code">بلوک کد</button>
+          <button data-scn="stream">در حال استریم</button>
+          <button data-scn="stopped">متوقف‌شده</button>
+          <button data-scn="error">خطا</button>
+          <button data-scn="drawer">فهرست گفتگوها</button>
+          <button data-scn="low">سهمیه کم</button>
+          <button data-scn="out">سهمیه تمام</button>
+          <button data-scn="debt">بدهکار</button>
+          <button data-scn="py">هشدار پایتون</button>
+          <button data-scn="pyout">خروجی پایتون</button>
+        </div>
+      </div>
+
+      <div class="note swapnote">
+        <h4>جای تصویر پس‌زمینه</h4>
+        <p>اینجا فعلاً یک تختهٔ سیاه با فرمول‌های کم‌رنگ کشیده‌ام. تصویر انیشتین روی جارو را در CSS، در کلاس <code>.board</code>، به‌جای گرادیان بگذار.</p>
+      </div>
+      <div class="note">
+        <h4>عنوان زیر دایره</h4>
+        <p>«فیزیک دبیرستان» و «هوش مصنوعی» داخل دایرهٔ ۱۰۴ پیکسلی به دو خط می‌شکنند. بیرون که باشد، تصویر داخل دایره تمام‌قد دیده می‌شود.</p>
+      </div>
+      <div class="note">
+        <h4>گذار لایه‌ها</h4>
+        <p>دایره‌های قبلی بالا می‌روند و محو می‌شوند، دایره‌های تازه با تأخیر پلکانی از پایین می‌آیند. مجموعاً حدود ۶۰۰ میلی‌ثانیه.</p>
+      </div>
+      <div class="note">
+        <h4>دستیار، نه نوار پایین</h4>
+        <p>AI در صفحهٔ اصلی یک دایره است و از لایهٔ دوم به بعد آیکون بنفش گوشهٔ چپ نوار بالا. نوار پایین با ناوبری پشته‌ای تو تضاد داشت.</p>
+      </div>
+      <div class="note">
+        <h4>علامت ؟ کنار پاراگراف</h4>
+        <p>در حاشیهٔ خالی سمت چپ می‌نشیند و با انتخاب متن مرورگر تداخل ندارد. برخلاف long-press، دیده می‌شود.</p>
+      </div>
+      <div class="note">
+        <h4>سهمیهٔ توکن</h4>
+        <p>زیر کادر نوشتن، درست جایی که دانش‌آموز تصمیم می‌گیرد خرج کند یا نه — نه در صفحهٔ پروفایل که هیچ‌وقت باز نمی‌شود.</p>
+      </div>
+      <div class="note">
+        <h4>نام گفتگو، نه نام تصادفی</h4>
+        <p>گفتگویی که از پاراگراف باز می‌شود نام «بار الکتریکی · پاراگراف ۲» می‌گیرد. نام تصادفی فهرست را بی‌فایده می‌کند — کاربر باید بتواند گفتگویی را که دیروز داشت پیدا کند.</p>
+      </div>
+      <div class="note">
+        <h4>بستن، نه بازگشت</h4>
+        <p>در چت گوشهٔ چپ <code>✕</code> است نه فلش. چون چت جایی در درخت ناوبری ندارد؛ باز و بسته می‌شود.</p>
+      </div>
+      <div class="note">
+        <h4>حذف نرم، با یک جمله توضیح</h4>
+        <p>گفتگو از فهرست می‌رود، ولی رکورد مصرف توکنش می‌ماند چون سهمیه از روی آن حساب می‌شود. همین یک جمله در کادر تأیید نوشته شده — نه در شرایط استفاده که کسی نمی‌خواند.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+  var ICONS = {
+    school:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 3 7v2h18V7z"/><path d="M5 9v9M19 9v9M9.5 9v9M14.5 9v9"/><path d="M2.5 18.5h19"/><path d="M12 2.5V1"/><path d="M12 1.6h3.4v2.2H12"/></svg>',
+    cap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.5 8.2 12 13.4l10.5-5.2z"/><path d="M5.6 10.4v5.1c0 1.7 2.9 3.1 6.4 3.1s6.4-1.4 6.4-3.1v-5.1"/><path d="M22.5 8.2v6.2"/></svg>',
+    wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h6a3 3 0 0 1 3 3v12a2.4 2.4 0 0 0-2.4-2.4H3z"/><path d="M21 4.5h-6a3 3 0 0 0-3 3v12a2.4 2.4 0 0 1 2.4-2.4H21z"/><path d="M15.4 8.6h3M15.4 11.6h2.2"/></svg>',
+    atom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>',
+    rocket:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3 2.4 4.7 6 4.7 10.1L12 17l-4.7-4.9C7.3 8 9 4.4 12 2z"/><circle cx="12" cy="9.2" r="1.8"/><path d="M7.3 12.1 4.4 14v3.3l2.9-1.6M16.7 12.1 19.6 14v3.3l-2.9-1.6"/><path d="M10.4 18.6c.6 1.6 1.6 2.7 1.6 2.7s1-1.1 1.6-2.7"/></svg>',
+    bio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5S3.5 15.4 3.5 9.4a4.6 4.6 0 0 1 8.5-2.5 4.6 4.6 0 0 1 8.5 2.5c0 6-8.5 11.1-8.5 11.1z"/><path d="M3.9 12h3.5l1.4-2.6 1.9 5 1.6-3.3 1.2 1.9h4.6"/></svg>',
+    book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3.5h11a3 3 0 0 1 3 3v14H7a3 3 0 0 1-3-3z"/><path d="M18 20.5H7a3 3 0 0 0-3 3"/><path d="M8 8h6M8 11.5h4"/></svg>'
+  };
+
+  var LEVELS = {
+    home:{crumb:'من فیزیکی', back:null, banner:false, ai:false, cols:'two', items:[
+      {icon:'school', cap:'فیزیک دبیرستان', go:'school'},
+      {icon:'cap',    cap:'فیزیک دانشگاه', go:'uni'},
+      {icon:'wiki',   cap:'ویکی فیزیک',    go:null},
+      {icon:'atom',   cap:'هوش مصنوعی',    go:'chat', accent:true}
+    ]},
+    school:{crumb:'من فیزیکی ← فیزیک دبیرستان', back:'home', banner:false, ai:true, cols:'two', items:[
+      {icon:'rocket', cap:'رشتهٔ ریاضی', screen:'s-chapters'},
+      {icon:'bio',    cap:'رشتهٔ تجربی', screen:'s-chapters'}
+    ]},
+    uni:{crumb:'من فیزیکی ← فیزیک دانشگاه', back:'home', banner:true, ai:true, cols:'one', items:[
+      {icon:'book', cap:'هالیدی — مبانی فیزیک', screen:'s-chapters'}
+    ]}
+  };
+
+  var CHAPTERS = [
+    ['۱','الکتریسیتهٔ ساکن','۴ بند · ۳۲ پرسش'],
+    ['۲','جریان الکتریکی','۵ بند · ۴۱ پرسش'],
+    ['۳','مغناطیس','۳ بند · ۲۸ پرسش'],
+    ['۴','القای الکترومغناطیسی','۴ بند · ۳۶ پرسش']
+  ];
+
+  var SECTIONS = [
+    {g:'محتوای فصل', rows:[
+      ['۱','بار الکتریکی','خواندن · ۶ دقیقه'],
+      ['۲','قانون کولن','خواندن · ۹ دقیقه'],
+      ['۳','میدان الکتریکی','خواندن · ۱۱ دقیقه']
+    ]},
+    {g:'تمرین و یادسپاری', band:true, rows:[
+      ['؟','پرسش‌ها','۱۸ پرسش چهارگزینه‌ای'],
+      ['Σ','مسائل','۱۴ مسئلهٔ تشریحی'],
+      ['⚏','کارت‌های حافظه','۲۴ کارت'],
+      ['◎','بازی تطبیق','نمودار و کمیت']
+    ]}
+  ];
+
+  var grid = document.getElementById('grid'),
+      crumb = document.getElementById('orb-crumb'),
+      backBtn = document.getElementById('orb-back'),
+      aiBtn = document.getElementById('orb-ai'),
+      banner = document.getElementById('cr-banner'),
+      scrim = document.getElementById('scrim'),
+      sheet = document.getElementById('sheet'),
+      sTitle = document.getElementById('sheet-title'),
+      sQ = document.getElementById('sheet-q');
+
+  var current = 'home', busy = false;
+
+  function paint(key){
+    var L = LEVELS[key];
+    current = key;
+    crumb.textContent = L.crumb;
+    backBtn.hidden = !L.back;
+    aiBtn.hidden = !L.ai;
+    banner.hidden = !L.banner;
+    grid.className = 'grid ' + L.cols;
+    grid.innerHTML = '';
+
+    L.items.forEach(function(it, i){
+      var b = document.createElement('button');
+      b.className = 'orb' + (it.accent ? ' accent' : '');
+      b.innerHTML = '<span class="disc">' + ICONS[it.icon] + '</span><span class="cap">' + it.cap + '</span>';
+      b.addEventListener('click', function(){
+        if (busy) return;
+        if (it.screen) { show(it.screen); return; }
+        if (it.go === 'chat') { openChat(chats[0], {}); return; }
+        if (it.go && LEVELS[it.go]) transition(it.go);
+      });
+      grid.appendChild(b);
+      setTimeout(function(){ b.classList.add('in'); }, 70 + i * 85);
+    });
+
+    if (L.banner) setTimeout(function(){ banner.classList.add('in'); }, 60);
+    else banner.classList.remove('in');
+  }
+
+  function transition(key){
+    busy = true;
+    banner.classList.remove('in');
+    var orbs = grid.querySelectorAll('.orb');
+    Array.prototype.forEach.call(orbs, function(o, i){
+      setTimeout(function(){ o.classList.remove('in'); o.classList.add('out'); }, i * 55);
+    });
+    setTimeout(function(){ paint(key); busy = false; }, 240 + orbs.length * 45);
+  }
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.id === id); });
+  }
+
+  backBtn.addEventListener('click', function(){
+    var b = LEVELS[current].back;
+    if (b) transition(b);
+  });
+  aiBtn.addEventListener('click', function(){ openSheet('ai'); });
+
+  document.querySelectorAll('[data-back]').forEach(function(btn){
+    btn.addEventListener('click', function(){ show(btn.getAttribute('data-back')); });
+  });
+  // The AI button in a top bar opens the assistant straight away. The
+  // two-option sheet exists only for a paragraph, where the choice
+  // between the assistant and the teacher is the actual question.
+  document.querySelectorAll('[data-sheet]').forEach(function(btn){
+    btn.addEventListener('click', function(){ openChat(chats[0], {}); });
+  });
+
+  var lastAskedPara = null;
+
+  function openSheet(kind, n){
+    lastAskedPara = (kind === 'para') ? n : null;
+    if (kind === 'ai' && !n){
+      sTitle.textContent = 'دستیار من فیزیکی';
+      sQ.textContent = 'سؤالت را بپرس، یا یکی از دو مسیر زیر را انتخاب کن.';
+    } else {
+      sTitle.textContent = 'این پاراگراف را نفهمیدم';
+      sQ.textContent = 'پاراگراف ' + n + ' از بند «بار الکتریکی» انتخاب شده است.';
+    }
+    scrim.classList.add('on');
+    sheet.classList.add('on');
+  }
+  function closeSheet(){ scrim.classList.remove('on'); sheet.classList.remove('on'); }
+  scrim.addEventListener('click', closeSheet);
+  document.querySelectorAll('.opt').forEach(function(o){ o.addEventListener('click', closeSheet); });
+
+  document.querySelectorAll('[data-ask]').forEach(function(b){
+    b.addEventListener('click', function(){ openSheet('para', b.getAttribute('data-ask')); });
+  });
+
+  // chapters
+  var cl = document.getElementById('chapter-list');
+  CHAPTERS.forEach(function(c){
+    var r = document.createElement('button');
+    r.className = 'row';
+    r.innerHTML = '<span class="thumb">' + c[0] + '</span>' +
+      '<span class="txt"><span class="t1">' + c[1] + '</span><span class="t2">' + c[2] + '</span></span>' +
+      '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg></span>';
+    r.addEventListener('click', function(){ show('s-sections'); });
+    cl.appendChild(r);
+  });
+
+  // sections
+  var sl = document.getElementById('section-list');
+  SECTIONS.forEach(function(grp){
+    var lab = document.createElement('div');
+    lab.className = 'group-label';
+    lab.textContent = grp.g;
+    sl.appendChild(lab);
+    grp.rows.forEach(function(s){
+      var r = document.createElement('button');
+      r.className = 'row' + (grp.band ? ' band' : '');
+      r.innerHTML = '<span class="thumb">' + s[0] + '</span>' +
+        '<span class="txt"><span class="t1">' + s[1] + '</span><span class="t2">' + s[2] + '</span></span>' +
+        '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg></span>';
+      r.addEventListener('click', function(){ if (!grp.band) show('s-reader'); });
+      sl.appendChild(r);
+    });
+  });
+
+  /* ===================== chat ===================== */
+
+  var FA = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  function fa(n){ return String(n).replace(/\d/g, function(d){ return FA[+d]; }); }
+  function faNum(n){
+    var s = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '٬');
+    return (n < 0 ? '−' : '') + fa(s);
+  }
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var ICON = {
+    copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+    up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10.5v9H4.5v-9z"/><path d="M7 10.5 11.5 4a1.8 1.8 0 0 1 3 1.6l-.7 3.7h4.4a1.9 1.9 0 0 1 1.85 2.3l-1.1 5.5A2.4 2.4 0 0 1 16.6 19H7z"/></svg>',
+    down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13.5v-9H4.5v9z"/><path d="M7 13.5 11.5 20a1.8 1.8 0 0 0 3-1.6l-.7-3.7h4.4a1.9 1.9 0 0 0 1.85-2.3l-1.1-5.5A2.4 2.4 0 0 0 16.6 5H7z"/></svg>',
+    refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-1.5 5.5"/><path d="M20 5v6h-6"/></svg>',
+    pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9.5 7V5.2h5V7"/><path d="M6.4 7l.8 12.2a1.6 1.6 0 0 0 1.6 1.5h6.4a1.6 1.6 0 0 0 1.6-1.5L17.6 7"/><path d="M10.2 10.8v6M13.8 10.8v6"/></svg>',
+    atom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>'
+  };
+
+  var SRC = {
+    site:     ['site','📖 از مقالات سایت'],
+    external: ['external','🔗 منبع خارجی'],
+    general:  ['general','💭 دانش عمومی'],
+    code:     ['code','🐍 کد']
+  };
+
+  var PY_CODE =
+'import numpy as np\n' +
+'import matplotlib.pyplot as plt\n\n' +
+'# Parameters\n' +
+'g  = 9.81    # gravitational acceleration (m/s^2)\n' +
+'v0 = 25.0    # initial speed (m/s)\n' +
+'angle = 45.0 # launch angle (deg)\n\n' +
+'# Calculations\n' +
+'t = np.linspace(0, 2*v0*np.sin(np.radians(angle))/g, 400)\n' +
+'x = v0 * np.cos(np.radians(angle)) * t\n' +
+'y = v0 * np.sin(np.radians(angle)) * t - 0.5 * g * t**2\n\n' +
+'plt.plot(x, y)\n' +
+'plt.xlabel("X (m)")\n' +
+'plt.ylabel("Y (m)")\n' +
+'plt.title("Projectile Motion")\n' +
+'plt.grid(True)\n' +
+'plt.show()\n\n' +
+'print(f"Range: {x[-1]:.2f} m")\n' +
+'print(f"Max height: {np.max(y):.2f} m")';
+
+  /* answers are block arrays, the same shape the markdown renderer would emit */
+  var A_MARKDOWN = [
+    {t:'h3', v:'سه قانون نیوتن'},
+    {t:'p',  v:'در اینجا سه اصل بنیادین مکانیک کلاسیک به صورت خلاصه توضیح داده شده‌اند:'},
+    {t:'h4', v:'۱. قانون اول (قانون اینرسی)'},
+    {t:'p',  v:'هر جسمی در حالت سکون یا حرکت یکنواخت باقی می‌ماند، مگر اینکه بر آن یک <strong>نیروی حاصل‌جمع غیر صفر</strong> وارد شود.'},
+    {t:'math', v:'ΣF⃗ = 0  ⇒  a⃗ = 0'},
+    {t:'h4', v:'۲. قانون دوم (قانون حرکت)'},
+    {t:'p',  v:'شتاب وارد شده به یک جسم مستقیماً با <strong>نیروی حاصل‌جمع</strong> و معکوساً با <strong>جرم</strong> آن نسبت دارد.'},
+    {t:'math', v:'F⃗ = m·a⃗'},
+    {t:'quote', v:'واحد نیرو در SI نیوتن است: <span class="ltr">1 N = 1 kg·m/s²</span>'},
+    {t:'ul', v:['جهت شتاب هم‌جهت با نیروست','برای جرم ثابت، <code class="inl">F = ma</code> برقرار است']}
+  ];
+
+  var A_SHORT = [
+    {t:'p', v:'نه. رابطهٔ کولن فقط برای بارهای نقطه‌ای یا کره‌های باردار یکنواخت نوشته شده. برای توزیع پیوسته باید بار را به عنصرهای بسیار کوچک بشکنی و روی آن‌ها انتگرال بگیری.'}
+  ];
+
+  var A_CODE = [
+    {t:'code', v:PY_CODE}
+  ];
+
+  var chats = [
+    { id:'c1', topic:'الکتریسیته', name:'این رابطه برای بار پیوسته هم صادقه؟', when:'امروز', tokens:1043,
+      msgs:[{who:'me',text:'این رابطه برای بار پیوسته هم صادقه؟'},
+            {who:'ai',blocks:A_SHORT,source:'site',rated:0}] },
+    { id:'c2', topic:'مکانیک', name:'سه قانون نیوتن را با تیتر و فهرست بنویس', when:'امروز', tokens:303,
+      msgs:[{who:'me',text:'سه قانون نیوتن را با تیتر و فهرست بنویس'},
+            {who:'ai',blocks:A_MARKDOWN,source:'site',rated:0}] },
+    { id:'c3', topic:'کد', name:'کد پایتون پرتابه با نمودار بنویس', when:'امروز', tokens:335,
+      msgs:[{who:'me',text:'کد پایتون پرتابه با نمودار بنویس'},
+            {who:'ai',blocks:A_CODE,source:'code',rated:0}] },
+    { id:'c4', topic:'الکترونیک', name:'ترانزیستور چیست؟', when:'هفتهٔ گذشته', tokens:1500, msgs:[] },
+    { id:'c5', topic:'گرانش', name:'گرانش زمین را چطوری اندازه می‌گیری؟', when:'هفتهٔ گذشته', tokens:3600, msgs:[] }
+  ];
+
+  var quota = { remaining: 98957, limit: 100000 };
+  var activeChat = null, draftCite = null, streaming = false, streamTimer = null;
+  var prevScreen = 's-orbs', filterText = '';
+
+  var chatScroll = document.getElementById('chat-scroll'),
+      chatList   = document.getElementById('chat-list'),
+      chatTitle  = document.getElementById('chat-title'),
+      chatSub    = document.getElementById('chat-sub'),
+      composer   = document.getElementById('composer'),
+      sendBtn    = document.getElementById('send'),
+      stopBtn    = document.getElementById('stop'),
+      meter      = document.getElementById('meter'),
+      draftSlot  = document.getElementById('draft-tag-slot'),
+      wallSlot   = document.getElementById('wall-slot'),
+      drawer     = document.getElementById('drawer'),
+      drawerScrim= document.getElementById('drawer-scrim'),
+      tokBadge   = document.getElementById('tokbadge'),
+      tokVal     = document.getElementById('tokval');
+
+  /* ---------- quota ---------- */
+
+  function renderQuota(){
+    var r = quota.remaining, cls = 'ok';
+    if (r < 0) cls = 'debt';
+    else if (r === 0) cls = 'out';
+    else if (r < quota.limit * 0.1) cls = 'low';
+
+    tokBadge.className = 'tokbadge ' + cls;
+    tokVal.textContent = (r === null) ? '∞' : faNum(r);
+    document.getElementById('drawer-quota').textContent =
+      (r === null ? '∞' : faNum(r)) + ' توکن';
+
+    meter.className = 'meter' + (cls === 'low' || cls === 'debt' ? ' warn' : '');
+    if (r < 0)       meter.innerHTML = 'سهمیهٔ امروز تمام شده و <b>' + faNum(-r) + ' توکن</b> به فردا منتقل می‌شود';
+    else if (r === 0) meter.innerHTML = 'سهمیهٔ امروز تمام شد';
+    else              meter.innerHTML = '<b>' + faNum(r) + ' توکن</b> از سهمیهٔ امروز باقی مانده';
+
+    wallSlot.innerHTML = '';
+    var blocked = (r !== null && r <= 0);
+    if (blocked){
+      wallSlot.innerHTML =
+        '<div class="wall"><h5>سقف سؤال‌های امروز تمام شد</h5>' +
+        '<p>' + (r < 0
+            ? 'آخرین پاسخ از سقف عبور کرد، پس فردا با ' + faNum(-r) + ' توکن بدهی شروع می‌کنی.'
+            : 'فردا سهمیهٔ تازه می‌گیری.') +
+        '</p><button>دیدن مصرف و ارتقای حساب</button></div>';
+    }
+    composer.disabled = blocked || streaming;
+    composer.placeholder = blocked ? 'تا فردا نمی‌توانی سؤال بفرستی' : 'سؤالت را بنویس…';
+    syncSend();
+  }
+
+  /* ---------- render one answer ---------- */
+
+  function renderBlocks(blocks){
+    var html = '';
+    blocks.forEach(function(b){
+      if (b.t === 'p')     html += '<p>' + b.v + '</p>';
+      else if (b.t === 'h3') html += '<h3>' + b.v + '</h3>';
+      else if (b.t === 'h4') html += '<h4>' + b.v + '</h4>';
+      else if (b.t === 'quote') html += '<blockquote>' + b.v + '</blockquote>';
+      else if (b.t === 'math')  html += '<div class="mathline">' + b.v + '</div>';
+      else if (b.t === 'ul') {
+        html += '<ul>' + b.v.map(function(li){ return '<li>' + li + '</li>'; }).join('') + '</ul>';
+      }
+      else if (b.t === 'code') {
+        html += '<div class="codewrap"><div class="codebar">' +
+                '<button class="codebtn run" data-run="1">▶ اجرا</button>' +
+                '<button class="codebtn" data-copycode="1">کپی</button></div>' +
+                '<pre>' + esc(b.v) + '</pre></div>';
+      }
+    });
+    return html;
+  }
+
+  function messageNode(m, idx){
+    var wrap = document.createElement('div');
+    wrap.className = 'msg ' + (m.who === 'me' ? 'me' : 'ai') + (m.error ? ' err' : '');
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble' + (m.streaming ? ' typing' : '');
+    bubble.innerHTML = m.who === 'me'
+      ? esc(m.text)
+      : (m.error ? '⚠️ ' + m.text : renderBlocks(m.blocks || []));
+    wrap.appendChild(bubble);
+
+    if (m.who === 'ai' && !m.streaming){
+      var foot = document.createElement('div');
+      foot.className = 'msg-foot';
+      if (m.source && SRC[m.source]){
+        foot.innerHTML = '<span class="srcbadge ' + SRC[m.source][0] + '">' + SRC[m.source][1] + '</span>';
+      }
+      if (m.error){
+        var r = document.createElement('button');
+        r.className = 'retry';
+        r.innerHTML = ICON.refresh + 'تلاش دوباره';
+        r.addEventListener('click', function(){ retryLast(); });
+        foot.appendChild(r);
+      } else {
+        var acts = document.createElement('div');
+        acts.className = 'msg-acts';
+        // copy at message level — on the site this exists only on code blocks,
+        // which makes an answer practically uncopyable on a phone.
+        var cp = document.createElement('button');
+        cp.className = 'act'; cp.innerHTML = ICON.copy; cp.setAttribute('aria-label','کپی پاسخ');
+        cp.addEventListener('click', function(){
+          cp.innerHTML = ICON.check; cp.classList.add('on');
+          setTimeout(function(){ cp.innerHTML = ICON.copy; cp.classList.remove('on'); }, 1500);
+        });
+        acts.appendChild(cp);
+        [['up',1],['down',-1]].forEach(function(p){
+          var b = document.createElement('button');
+          b.className = 'act' + (m.rated === p[1] ? ' on' : '');
+          b.innerHTML = ICON[p[0]];
+          b.setAttribute('aria-label', p[1] === 1 ? 'مفید بود' : 'مفید نبود');
+          b.addEventListener('click', function(){ m.rated = m.rated === p[1] ? 0 : p[1]; renderMessages(); });
+          acts.appendChild(b);
+        });
+        foot.appendChild(acts);
+      }
+      wrap.appendChild(foot);
+    }
+    return wrap;
+  }
+
+  function renderMessages(){
+    chatScroll.innerHTML = '';
+    if (!activeChat.msgs.length && !streaming){
+      var empty = document.createElement('div');
+      empty.className = 'chat-empty';
+      empty.innerHTML =
+        '<span class="glyph">' + ICON.atom + '</span>' +
+        '<h3>چه چیزی را نفهمیدی؟</h3>' +
+        '<p>هر جای مقاله گیر کردی، روی علامت ؟ کنار همان پاراگراف بزن تا سؤالت با متنش اینجا بیاید. یا یکی از این‌ها را امتحان کن:</p>' +
+        '<div class="seeds">' +
+          '<button class="seed"><span class="k">؟</span>تفاوت بار و جرم چیست؟</button>' +
+          '<button class="seed"><span class="k">Σ</span>قانون دوم نیوتن را با مثال توضیح بده</button>' +
+          '<button class="seed"><span class="k">🐍</span>کد پایتون سقوط آزاد با نمودار بنویس</button>' +
+        '</div>';
+      chatScroll.appendChild(empty);
+      empty.querySelectorAll('.seed').forEach(function(s){
+        s.addEventListener('click', function(){
+          composer.value = s.textContent.replace(/^[^؀-ۿ]*/, '');
+          autogrow(); syncSend(); composer.focus();
+        });
+      });
+      return;
+    }
+
+    activeChat.msgs.forEach(function(m, i){ chatScroll.appendChild(messageNode(m, i)); });
+
+    if (streaming){
+      var st = document.createElement('div');
+      st.className = 'status';
+      st.id = 'stream-status';
+      st.innerHTML = '<i></i><span>در حال جست‌وجو در مقالات سایت…</span>';
+      chatScroll.appendChild(st);
+    }
+    if (activeChat.stopped){
+      var s = document.createElement('div');
+      s.className = 'stopped';
+      s.textContent = 'تولید پاسخ متوقف شد — این متن ذخیره نشده است';
+      chatScroll.appendChild(s);
+    }
+
+    chatScroll.querySelectorAll('[data-copycode]').forEach(function(b){
+      b.addEventListener('click', function(){
+        b.textContent = 'کپی شد'; b.classList.add('copied');
+        setTimeout(function(){ b.textContent = 'کپی'; b.classList.remove('copied'); }, 1600);
+      });
+    });
+    chatScroll.querySelectorAll('[data-run]').forEach(function(b){
+      b.addEventListener('click', function(){ openPy('warn'); });
+    });
+
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+
+  /* ---------- chat lifecycle ---------- */
+
+  function openChat(chat, opts){
+    var on = document.querySelector('.screen.on');
+    if (on && on.id !== 's-chat') prevScreen = on.id;
+    stopStream(true);
+    activeChat = chat;
+    activeChat.stopped = false;
+    chatTitle.textContent = chat.name;
+    chatSub.textContent = chat.msgs.length ? 'پاسخ‌دهنده: Groq' : 'گفتگوی تازه';
+
+    draftSlot.innerHTML = '';
+    draftCite = (opts && opts.cite) || null;
+    composer.value = (opts && opts.draft) || '';
+    if (draftCite){
+      draftSlot.innerHTML =
+        '<span class="draft-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h11M4 12h16M4 17h8"/></svg>' + draftCite + '</span>';
+    }
+    autogrow(); renderMessages(); renderChatList(); renderQuota();
+    show('s-chat');
+    setTimeout(function(){
+      if (!composer.disabled){ composer.focus(); composer.selectionStart = composer.value.length; }
+    }, 60);
+  }
+
+  function newChat(name, opts){
+    var c = { id:'c'+Date.now(), topic:'تازه', name: name || 'گفتگوی جدید', when:'امروز', tokens:0, msgs:[] };
+    chats.unshift(c);
+    openChat(c, opts || {});
+    return c;
+  }
+
+  /* ---------- streaming ---------- */
+
+  function startStream(scenario){
+    streaming = true;
+    activeChat.stopped = false;
+    stopBtn.hidden = false;
+    sendBtn.hidden = true;
+    composer.disabled = true;
+    renderMessages();
+
+    var steps = ['در حال جست‌وجو در مقالات سایت…', 'در حال فکر کردن…', 'در حال نوشتن پاسخ…'];
+    var i = 0;
+    streamTimer = setInterval(function(){
+      i++;
+      var st = document.getElementById('stream-status');
+      if (st && i < steps.length) st.querySelector('span').textContent = steps[i];
+      if (i >= steps.length){
+        clearInterval(streamTimer); streamTimer = null;
+        if (scenario === 'error') finishError();
+        else finishOk(scenario);
+      }
+    }, 900);
+  }
+
+  function finishOk(scenario){
+    streaming = false;
+    stopBtn.hidden = true; sendBtn.hidden = false;
+    var isCode = scenario === 'code';
+    activeChat.msgs.push({
+      who:'ai',
+      blocks: isCode ? A_CODE : (scenario === 'markdown' ? A_MARKDOWN : A_SHORT),
+      source: isCode ? 'code' : 'site',
+      rated: 0
+    });
+    quota.remaining -= isCode ? 335 : 260;
+    renderMessages(); renderQuota(); renderChatList();
+  }
+
+  function finishError(){
+    streaming = false;
+    stopBtn.hidden = true; sendBtn.hidden = false;
+    activeChat.msgs.push({ who:'ai', error:true, text:'ارتباط با دستیار قطع شد. اینترنت را بررسی کن.' });
+    renderMessages(); renderQuota();
+  }
+
+  function stopStream(silent){
+    if (streamTimer){ clearInterval(streamTimer); streamTimer = null; }
+    if (streaming){
+      streaming = false;
+      stopBtn.hidden = true; sendBtn.hidden = false;
+      if (!silent){ activeChat.stopped = true; renderMessages(); }
+    }
+    composer.disabled = false;
+  }
+
+  function retryLast(){
+    if (activeChat.msgs.length && activeChat.msgs[activeChat.msgs.length-1].error){
+      activeChat.msgs.pop();
+      renderMessages();
+      startStream('normal');
+    }
+  }
+
+  stopBtn.addEventListener('click', function(){ stopStream(false); renderQuota(); });
+
+  /* ---------- composer ---------- */
+
+  function autogrow(){
+    composer.style.height = 'auto';
+    composer.style.height = Math.min(composer.scrollHeight, 110) + 'px';
+  }
+  function syncSend(){ sendBtn.disabled = composer.disabled || composer.value.trim() === ''; }
+  composer.addEventListener('input', function(){ autogrow(); syncSend(); });
+
+  sendBtn.addEventListener('click', function(){
+    var text = composer.value.trim();
+    if (!text) return;
+    activeChat.msgs.push({ who:'me', text: text });
+    if (activeChat.name === 'گفتگوی جدید'){
+      activeChat.name = text.length > 34 ? text.slice(0,34) + '…' : text;
+      activeChat.topic = /کد|پایتون|python/i.test(text) ? 'کد' : 'فیزیک';
+      chatTitle.textContent = activeChat.name;
+    }
+    composer.value = ''; draftSlot.innerHTML = ''; draftCite = null;
+    autogrow(); renderMessages();
+    startStream(/کد|پایتون|python/i.test(text) ? 'code' : 'normal');
+  });
+
+  /* ---------- drawer ---------- */
+
+  function renderChatList(){
+    chatList.innerHTML = '';
+    var shown = chats.filter(function(c){
+      return !filterText || c.name.indexOf(filterText) !== -1 || c.topic.indexOf(filterText) !== -1;
+    });
+    if (!shown.length){
+      chatList.innerHTML = '<div class="list-head">چیزی پیدا نشد</div>';
+      return;
+    }
+    var groups = {};
+    shown.forEach(function(c){ (groups[c.when] = groups[c.when] || []).push(c); });
+
+    Object.keys(groups).forEach(function(g){
+      var h = document.createElement('div');
+      h.className = 'list-head'; h.textContent = g;
+      chatList.appendChild(h);
+
+      groups[g].forEach(function(c){
+        var row = document.createElement('div');
+        row.className = 'chat-item' + (activeChat && c.id === activeChat.id ? ' active' : '');
+        drawRow(row, c);
+        chatList.appendChild(row);
+      });
+    });
+  }
+
+  function drawRow(row, c){
+    row.innerHTML =
+      '<button class="name"><span class="n1">' + c.name + '</span>' +
+        '<span class="n2"><span class="topic">' + c.topic + '</span>' + faNum(c.tokens) + ' توکن</span></button>' +
+      '<button class="chat-act" data-act="rename" aria-label="تغییر نام">' + ICON.pencil + '</button>' +
+      '<button class="chat-act" data-act="del" aria-label="حذف">' + ICON.trash + '</button>';
+
+    row.querySelector('.name').addEventListener('click', function(){ closeDrawer(); openChat(c, {}); });
+
+    row.querySelector('[data-act="rename"]').addEventListener('click', function(){
+      // in place, like the site — no system prompt() on a phone
+      row.innerHTML = '';
+      var inp = document.createElement('input');
+      inp.className = 'rename-input'; inp.value = c.name; inp.maxLength = 120;
+      row.appendChild(inp);
+      inp.focus(); inp.select();
+      function commit(){
+        if (inp.value.trim()) c.name = inp.value.trim();
+        if (activeChat && activeChat.id === c.id) chatTitle.textContent = c.name;
+        renderChatList();
+      }
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', function(e){
+        if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+        if (e.key === 'Escape') renderChatList();
+      });
+    });
+
+    row.querySelector('[data-act="del"]').addEventListener('click', function(){
+      row.innerHTML =
+        '<div class="delbar"><p>این گفتگو حذف شود؟</p>' +
+        '<p class="keeps">از فهرست می‌رود؛ مصرف توکن ثبت‌شده باقی می‌ماند.</p>' +
+        '<div class="row2"><button class="del-yes">حذف</button><button class="del-no">انصراف</button></div></div>';
+      row.querySelector('.del-no').addEventListener('click', renderChatList);
+      row.querySelector('.del-yes').addEventListener('click', function(){
+        chats = chats.filter(function(x){ return x.id !== c.id; });
+        if (activeChat && activeChat.id === c.id) newChat();
+        renderChatList();
+      });
+    });
+  }
+
+  document.getElementById('chat-search').addEventListener('input', function(e){
+    filterText = e.target.value.trim(); renderChatList();
+  });
+
+  function openDrawer(){ drawer.classList.add('on'); drawerScrim.classList.add('on'); renderChatList(); }
+  function closeDrawer(){ drawer.classList.remove('on'); drawerScrim.classList.remove('on'); }
+
+  document.getElementById('menu-btn').addEventListener('click', openDrawer);
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  drawerScrim.addEventListener('click', closeDrawer);
+  document.getElementById('new-chat').addEventListener('click', function(){ closeDrawer(); newChat(); });
+  document.getElementById('chat-close').addEventListener('click', function(){ stopStream(true); show(prevScreen); });
+  tokBadge.addEventListener('click', function(){ openDrawer(); });
+
+  /* ---------- python runner ---------- */
+
+  var pysheet = document.getElementById('pysheet'),
+      pyBody  = document.getElementById('py-body'),
+      pyFoot  = document.getElementById('py-foot');
+
+  function openPy(state){
+    pysheet.classList.add('on');
+    renderPy(state);
+  }
+  function closePy(){ pysheet.classList.remove('on'); }
+  document.getElementById('py-close').addEventListener('click', closePy);
+
+  function renderPy(state){
+    var codeHtml = '<pre class="py-code">' + esc(PY_CODE) + '</pre>';
+
+    if (state === 'warn'){
+      // Pyodide runs on the phone, not on a server. That is a state, not a toast.
+      pyBody.innerHTML =
+        '<div class="py-warn"><h5><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v5M12 17.5v.01"/><path d="M10.3 3.9 2.4 17.6A1.9 1.9 0 0 0 4 20.5h16a1.9 1.9 0 0 0 1.6-2.9L13.7 3.9a1.9 1.9 0 0 0-3.4 0z"/></svg>اجرا روی همین گوشی انجام می‌شود</h5>' +
+        '<p>کد روی سرور اجرا نمی‌شود. مفسر پایتون داخل اپ بالا می‌آید:</p>' +
+        '<ul><li>اولین اجرا حدود ۲۰ ثانیه طول می‌کشد</li>' +
+        '<li>حدود ۳۰۰ مگابایت حافظه می‌گیرد</li>' +
+        '<li>روی گوشی‌های قدیمی ممکن است اپ بسته شود</li></ul></div>' + codeHtml;
+      pyFoot.innerHTML = '<button class="py-run">شروع اجرا</button><button class="py-cancel">بستن</button>';
+      pyFoot.querySelector('.py-run').addEventListener('click', function(){ renderPy('loading'); });
+      pyFoot.querySelector('.py-cancel').addEventListener('click', closePy);
+      return;
+    }
+
+    if (state === 'loading'){
+      pyBody.innerHTML = codeHtml +
+        '<div class="py-load"><i></i><i></i><i></i><span>بارگذاری مفسر پایتون و numpy…</span></div>';
+      pyFoot.innerHTML = '<button class="py-run" disabled>در حال آماده‌سازی…</button><button class="py-cancel">لغو</button>';
+      pyFoot.querySelector('.py-cancel').addEventListener('click', closePy);
+      setTimeout(function(){ if (pysheet.classList.contains('on')) renderPy('done'); }, 1900);
+      return;
+    }
+
+    pyBody.innerHTML = codeHtml +
+      '<div class="py-label">خروجی</div>' +
+      '<pre class="py-out">Matplotlib is building the font cache; this may take a moment.\nRange: 63.71 m\nMax height: 15.93 m</pre>' +
+      '<div class="py-fig">' +
+      '<svg viewBox="0 0 300 170" role="img" aria-label="نمودار مسیر پرتابه">' +
+        '<rect x="0" y="0" width="300" height="170" fill="#ffffff"/>' +
+        '<g stroke="#E5E7EB" stroke-width="1">' +
+          '<path d="M40 20V145M105 20V145M170 20V145M235 20V145"/>' +
+          '<path d="M40 40h230M40 75h230M40 110h230"/>' +
+        '</g>' +
+        '<path d="M40 145 Q155 5 270 145" fill="none" stroke="#2563EB" stroke-width="2.2"/>' +
+        '<path d="M40 20V145H275" fill="none" stroke="#94A3B8" stroke-width="1.4"/>' +
+        '<text x="157" y="165" font-size="10" fill="#475569" text-anchor="middle" font-family="sans-serif">X (m)</text>' +
+        '<text x="14" y="86" font-size="10" fill="#475569" text-anchor="middle" font-family="sans-serif" transform="rotate(-90 14 86)">Y (m)</text>' +
+        '<text x="157" y="15" font-size="10" fill="#111827" text-anchor="middle" font-family="sans-serif">Projectile Motion</text>' +
+      '</svg></div>';
+    pyFoot.innerHTML = '<button class="py-run">اجرای دوباره</button><button class="py-cancel">بستن</button>';
+    pyFoot.querySelector('.py-run').addEventListener('click', function(){ renderPy('loading'); });
+    pyFoot.querySelector('.py-cancel').addEventListener('click', closePy);
+  }
+
+  /* ---------- entry points ---------- */
+
+  function chatFromParagraph(n){
+    var cite = 'بار الکتریکی · پاراگراف ' + fa(n);
+    newChat(cite, { draft:'این پاراگراف را نفهمیدم، ساده‌تر توضیح بده.', cite: cite });
+  }
+
+  document.querySelectorAll('.opt.ai').forEach(function(b){
+    b.addEventListener('click', function(){
+      closeSheet();
+      if (lastAskedPara) chatFromParagraph(lastAskedPara);
+      else openChat(chats[0], {});
+    });
+  });
+
+  /* ---------- scenario switcher (prototype only) ---------- */
+
+  document.querySelectorAll('[data-scn]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var s = b.getAttribute('data-scn');
+      document.querySelectorAll('[data-scn]').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      closeDrawer(); closePy();
+
+      if (s === 'empty')      { quota.remaining = 98957; newChat(); }
+      else if (s === 'normal'){ quota.remaining = 98957; openChat(chats[1], {}); }
+      else if (s === 'code')  { quota.remaining = 98957; openChat(chats[2], {}); }
+      else if (s === 'stream'){ quota.remaining = 98957; openChat(chats[0], {}); startStream('markdown'); }
+      else if (s === 'stopped'){ openChat(chats[0], {}); startStream('markdown');
+                                 setTimeout(function(){ stopStream(false); }, 1100); }
+      else if (s === 'error') { openChat(chats[0], {}); startStream('error'); }
+      else if (s === 'low')   { quota.remaining = 4200;  openChat(chats[1], {}); }
+      else if (s === 'out')   { quota.remaining = 0;     openChat(chats[1], {}); }
+      else if (s === 'debt')  { quota.remaining = -1830; openChat(chats[1], {}); }
+      else if (s === 'drawer'){ openChat(chats[1], {}); openDrawer(); }
+      else if (s === 'py')    { openChat(chats[2], {}); openPy('warn'); }
+      else if (s === 'pyout') { openChat(chats[2], {}); openPy('done'); }
+    });
+  });
+
+  paint('home');
+  renderQuota();
+})();
+
+</script>
+
+</head>
+</html>

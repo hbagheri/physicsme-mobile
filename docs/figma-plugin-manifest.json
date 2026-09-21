@@ -1,0 +1,12 @@
+{
+  "name": "Man Physicsi — Design System",
+  "id": "man-physicsi-design-system",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "Runs entirely offline; only creates local styles and nodes."
+  }
+}

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+
+<!-- viewport-fit=cover is what lets env(safe-area-inset-*) return real values
+     on notched iPhones. Without it the app sits inside letterboxed bars. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+
+<title>من فیزیکی</title>
+<meta name="description" content="خواندن و یادگیری فیزیک به زبان فارسی">
+
+<!-- ===== iOS home-screen app ===== -->
+<!-- apple-* is the legacy name iOS still honours; mobile-web-app-capable is
+     the standard one. Ship both — iOS reads the first, everyone else the second. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="من فیزیکی">
+<!-- black-translucent lets the board background run under the status bar.
+     It only looks right because the layout pads by safe-area-inset-top. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1026">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet" href="src/styles/tokens.css">
+<link rel="stylesheet" href="src/styles/app.css">
+<link rel="stylesheet" href="src/styles/chat.css">
+</head>
+
+<body>
+
+<div class="app" id="app">
+
+  <!-- ===== circle-grid screen (home / branch / books) ===== -->
+  <section class="screen is-on" id="s-orbs" data-template="circle-grid">
+    <div class="board" aria-hidden="true">
+      <div class="board-formulas">
+        <span style="top:9%;inset-inline-end:6%">E = mc²</span>
+        <span style="top:29%;inset-inline-start:5%">F = ma</span>
+        <span style="top:58%;inset-inline-end:4%">λ = h / p</span>
+        <span style="top:70%;inset-inline-start:7%">∇·E = ρ/ε₀</span>
+        <span style="top:87%;inset-inline-end:8%">S = k log W</span>
+      </div>
+    </div>
+
+    <header class="topbar topbar--dark">
+      <button class="iconbtn" id="orb-back" hidden aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <span class="crumb" id="orb-crumb">من فیزیکی</span>
+      <button class="iconbtn iconbtn--ai" id="orb-ai" hidden aria-label="دستیار هوش مصنوعی">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+      </button>
+    </header>
+
+    <div class="banner" id="copyright-banner" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+      <span>به‌دلیل محدودیت‌های کپی‌رایت، به‌جای اصل کتاب‌ها جزوه‌ای بر پایهٔ آن‌ها آمده است. پرسش‌ها تا حد ممکن به سؤالات اصلی نزدیک‌اند، اما حق نشر رعایت شده.</span>
+    </div>
+
+    <div class="orb-stage">
+      <div class="orb-grid" id="orb-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===== list screen (chapters / sections) ===== -->
+  <section class="screen" id="s-list" data-template="list">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-back aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles">
+        <div class="screen-title" id="list-title">فصل‌ها</div>
+        <div class="crumb" id="list-crumb"></div>
+      </div>
+      <button class="iconbtn iconbtn--ai" data-open-ai aria-label="دستیار هوش مصنوعی">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+      </button>
+    </header>
+    <div class="scroll" id="list-body"></div>
+  </section>
+
+  <!-- ===== reader screen ===== -->
+  <section class="screen" id="s-reader" data-template="reader">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" data-back aria-label="بازگشت">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="topbar-titles">
+        <div class="screen-title" id="reader-title">بار الکتریکی</div>
+        <div class="crumb" id="reader-crumb">فصل ۱ ← بند ۱</div>
+      </div>
+      <button class="iconbtn iconbtn--ai" data-open-ai aria-label="دستیار هوش مصنوعی">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg>
+      </button>
+    </header>
+    <div class="scroll reader" id="reader-body"></div>
+  </section>
+
+
+  <!-- ===== chat screen ===== -->
+  <section class="screen" id="s-chat" data-template="chat">
+    <header class="topbar topbar--light">
+      <button class="iconbtn" id="chat-menu" aria-label="گفتگوها">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="topbar-titles">
+        <div class="screen-title" id="chat-title">گفتگوی جدید</div>
+        <div class="crumb" id="chat-sub">دستیار من فیزیکی</div>
+      </div>
+      <button class="tokbadge ok" id="chat-tokbadge" aria-label="سهمیهٔ توکن">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5V7a1.6 1.6 0 0 1 1.6-1.6h14.8A1.6 1.6 0 0 1 21 7v2.5a2.5 2.5 0 0 0 0 5V17a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M14 6v12"/></svg>
+        <span id="chat-tokval">∞</span>
+      </button>
+      <button class="iconbtn" id="chat-close" aria-label="بستن">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="chat-wrap">
+      <div class="lab-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v5M12 17.5v.01"/><path d="M10.3 3.9 2.4 17.6A1.9 1.9 0 0 0 4 20.5h16a1.9 1.9 0 0 0 1.6-2.9L13.7 3.9a1.9 1.9 0 0 0-3.4 0z"/></svg>
+        <span>نسخهٔ آزمایشی — دستیار هنوز در حال آموزش است. به پاسخ‌ها کاملاً اعتماد نکن.</span>
+      </div>
+
+      <div class="chat-scroll" id="chat-scroll"></div>
+
+      <div class="composer">
+        <div id="chat-wall"></div>
+        <div id="chat-draft"></div>
+        <div class="composer-row">
+          <textarea id="chat-composer" rows="1" placeholder="سؤالت را بنویس…"></textarea>
+          <button class="send" id="chat-send" disabled aria-label="ارسال">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="stop" id="chat-stop" hidden aria-label="توقف">
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+          </button>
+        </div>
+        <p class="meter" id="chat-meter"></p>
+      </div>
+    </div>
+
+    <div class="drawer" id="chat-drawer">
+      <div class="drawer-head">
+        <h3>گفتگوها</h3>
+        <button class="iconbtn" id="drawer-close" aria-label="بستن">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <button class="newchat" id="chat-new">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        گفتگوی جدید
+      </button>
+      <div class="searchbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="chat-search" placeholder="جست‌وجو در گفتگوها">
+      </div>
+      <div class="chat-list" id="chat-list"></div>
+      <div class="drawer-foot">
+        سهمیهٔ امروز: <b id="drawer-quota">∞</b>
+      </div>
+    </div>
+    <div class="scrim" id="chat-scrim"></div>
+
+    <div class="pysheet" id="pysheet">
+      <div class="py-head">
+        <span>🐍 اجرای کد Python</span>
+        <button class="x" id="py-close" aria-label="بستن">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="py-body" id="py-body"></div>
+      <div class="py-foot" id="py-foot"></div>
+    </div>
+  </section>
+
+  <!-- ===== bottom sheet ===== -->
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-handle"></div>
+    <h3 class="t-h2" id="sheet-title">این پاراگراف را نفهمیدم</h3>
+    <p class="t-label sheet-sub" id="sheet-sub"></p>
+
+    <button class="opt opt--ai" id="opt-ai">
+      <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.2"/><ellipse cx="12" cy="12" rx="10" ry="4.4"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.4" transform="rotate(-60 12 12)"/></svg></span>
+      <span class="opt-text">
+        <span class="opt-t1">از دستیار بپرس</span>
+        <span class="opt-t2">پاسخ فوری، از سهمیهٔ توکن تو کم می‌شود</span>
+      </span>
+    </button>
+
+    <button class="opt opt--tutor" id="opt-tutor">
+      <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="opt-text">
+        <span class="opt-t1">برای استاد بفرست</span>
+        <span class="opt-t2">پاسخ در تلگرام به تو اطلاع داده می‌شود</span>
+      </span>
+    </button>
+
+    <p class="quota t-label" id="quota"></p>
+  </div>
+
+  <!-- iOS has no beforeinstallprompt, so the only way to be installed is to
+       teach the user the Share → Add to Home Screen gesture. -->
+  <div class="ios-tip" id="ios-tip" hidden>
+    <button class="ios-tip-close" id="ios-tip-close" aria-label="بستن">✕</button>
+    <p>برای نصب روی آیفون: دکمهٔ <b>اشتراک‌گذاری</b> در نوار پایین سافاری، سپس <b>Add to Home Screen</b>.</p>
+  </div>
+
+</div>
+
+<script src="src/js/chat.js"></script>
+<script src="src/js/app.js"></script>
+</body>
+</html>

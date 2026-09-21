@@ -58,16 +58,32 @@ await shot('01-home');
 /* ---- 2. school → riazi → book → chapter → article ----
    Every step below this one is a live request to physicsme.ir, so the waits
    are generous: a cold edge miss is slower than anything the fixtures did. */
+
+/* The list is replaced in place, so waiting for `.row` to exist proves
+   nothing — the previous level's rows are still on screen while the fetch
+   is in flight. Waiting for the first row's *text* to change is the only
+   signal that the next level has actually arrived. */
+async function intoRow(n) {
+  const before = await page.locator('#s-list .row').first().textContent();
+  await page.locator('#s-list .row').nth(n).click();
+  await page.waitForFunction(
+    prev => {
+      const r = document.querySelector('#s-list .row');
+      return !r || r.textContent !== prev;
+    },
+    before,
+    { timeout: 15000 }
+  );
+}
+
 await page.locator('.orb').nth(0).click();
 await page.waitForTimeout(700);
 await page.locator('.orb').nth(0).click();          // رشتهٔ ریاضی
 await page.waitForSelector('#s-list .row', { timeout: 15000 });
 const bookCount = await page.locator('#s-list .row').count();
-await page.locator('#s-list .row').nth(0).click();  // دهم ریاضی
-await page.waitForSelector('#s-list .row', { timeout: 15000 });
+await intoRow(0);                                   // دهم ریاضی
 const chapters = await page.locator('#s-list .row').count();
-await page.locator('#s-list .row').nth(0).click();  // فصل ۱
-await page.waitForSelector('#s-list .row', { timeout: 15000 });
+await intoRow(0);                                   // فصل ۱
 const sections = await page.locator('#s-list .row').count();
 await page.locator('#s-list .row').nth(0).click();  // مقالهٔ ۱
 await page.waitForSelector('#s-reader .para', { timeout: 15000 });
@@ -192,10 +208,18 @@ await page.waitForTimeout(500);
 await page.click('#orb-account');
 await page.waitForTimeout(300);
 await page.click('#acc-login');
-await page.click('#auth-start');
+// The chooser asks the server which methods it can deliver, so it draws a
+// beat later than the screen it is on.
+await page.waitForSelector('#auth-tg, #auth-em, #auth-state .card', { timeout: 15000 });
+await shot('10-auth-methods');
+// Signing up for real would create a WordPress user on every run, so the
+// account screens below are shown with local state only. `pm-auth` is
+// deliberately not set: a bogus credential would go out on every request.
+await page.evaluate(() => localStorage.setItem('pm-user', JSON.stringify({ name: 'آزمون' })));
+await page.goto(BASE + '/index.html?desktop=1');
+await page.waitForTimeout(500);
+await page.click('#orb-account');
 await page.waitForTimeout(300);
-await shot('10-auth-waiting');
-await page.waitForTimeout(2800);
 await shot('11-account');
 await page.locator('#account-body .prow').nth(0).click();
 await page.waitForTimeout(300);

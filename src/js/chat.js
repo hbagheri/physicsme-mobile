@@ -19,15 +19,10 @@ window.PMChat = (function () {
      1. API — shapes taken verbatim from the plugin (REPORT.md §1.3)
      =================================================================== */
 
-  function token() {
-    try { return localStorage.getItem('pm-auth'); } catch (e) { return null; }
-  }
+  function token() { return window.PMAuth.token(); }
 
   function authHeaders() {
-    var h = { 'Content-Type': 'application/json' };
-    var t = token();
-    if (t) h['Authorization'] = 'Basic ' + t;   // WP Application Passwords
-    return h;
+    return window.PMAuth.headers({ 'Content-Type': 'application/json' });
   }
 
   var api = {

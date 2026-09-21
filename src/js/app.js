@@ -77,8 +77,15 @@
   var API = 'https://physicsme.ir/wp-json/pm/v1';
 
   function getJSON(path) {
-    return fetch(API + path, { headers: { Accept: 'application/json' } })
+    return fetch(API + path, { headers: window.PMAuth.contentHeaders({ Accept: 'application/json' }) })
       .then(function (r) {
+        // 402 is not a failure to retry — the article is there and the
+        // reader needs a sign-up card, not the offline/error screen.
+        if (r.status === 402) {
+          var e = new Error('locked');
+          e.locked = true;
+          throw e;
+        }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       });
@@ -133,7 +140,7 @@
       if (saved.has(slug)) return Promise.resolve();
       if (saved.full()) return Promise.reject(new Error('full'));
       var url = API + '/articles/' + slug;
-      return fetch(url, { headers: { Accept: 'application/json' } })
+      return fetch(url, { headers: window.PMAuth.contentHeaders({ Accept: 'application/json' }) })
         .then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return caches.open(SAVE_CACHE).then(function (c) { return c.put(url, r); });
@@ -535,6 +542,28 @@
 
   /* ---- navigation ---- */
 
+  /* An article behind the membership gate. Not a failure — the text exists
+     and the reader is one free sign-up away from it, so the screen offers
+     that instead of a retry button that would return the same 402. */
+  function renderLocked(item) {
+    el.readerTitle.textContent = item.title || '';
+    el.readerCrumb.textContent = crumbText();
+    el.readerBody.innerHTML =
+      '<div class="reader-inner"><div class="locked">' +
+        '<span class="locked-ico" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+          '<rect x="4" y="10.5" width="16" height="11" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>' +
+        '</span>' +
+        '<h3>' + T('gate.title') + '</h3>' +
+        '<p>' + T('gate.body') + '</p>' +
+        '<button class="btn" id="locked-join">' + T('gate.join') + '</button>' +
+        '<p class="t-small">' + T('gate.free') + '</p>' +
+      '</div></div>';
+    el.readerBody.scrollTop = 0;
+    $('#locked-join').addEventListener('click', showAuth);
+    showScreen('s-reader');
+  }
+
   /* Content now comes over the network, so every screen has a way to fail.
      A dead screen with no explanation is worse than a wrong one. */
   function renderFail(target, screen, retry) {
@@ -570,7 +599,8 @@
     if (item.kind === 'article') {
       api.article(item.id)
         .then(function (doc) { renderArticle(doc, item); })
-        .catch(function () {
+        .catch(function (e) {
+          if (e && e.locked) { renderLocked(item); return; }
           renderFail(el.readerBody, 's-reader', function () { stack.pop(); open(item); });
         });
     } else {
@@ -599,7 +629,9 @@
       return;
     }
     if (parent.kind === 'article') {
-      api.article(parent.id).then(function (doc) { renderArticle(doc, parent); });
+      api.article(parent.id)
+        .then(function (doc) { renderArticle(doc, parent); })
+        .catch(function (e) { if (e && e.locked) renderLocked(parent); });
       return;
     }
     api.nodes(parent.id).then(function (kids) { renderList(kids, parent); });
@@ -707,6 +739,9 @@
     },
     logout: function () {
       try { localStorage.removeItem('pm-user'); } catch (e) {}
+      window.PMAuth.clear();
+      // Articles read as a member must not stay readable after signing out.
+      cache = {};
       return Promise.resolve();
     },
     // App Store rules require this to really delete, not hide. The endpoint
@@ -736,46 +771,142 @@
            '</button>';
   }
 
-  /* ---- auth — Telegram only ---- */
+  /* ---- auth ----
+     Two roads to one credential. Telegram is offered first because the
+     tutor replies already arrive there, so it costs no second inbox; email
+     exists because Telegram is not installed on every phone. Which of the
+     two the screen actually shows is the server's call — /auth/me reports
+     what it can deliver, and a method that cannot send is never drawn. */
+
+  function showAuth() { openPage('s-auth', function () { renderAuth('start'); }); }
+
+  var authPoll = null;
+  function stopPolling() { clearInterval(authPoll); authPoll = null; }
+
+  function authDone(res) {
+    stopPolling();
+    window.PMAuth.setCredential(res.credential);
+    // The gate answers differently now, so a chapter fetched as a guest
+    // must not be served from the session cache.
+    cache = {};
+    account.save({ name: res.name || T('account.guest') })
+      .then(function () { showAccount(); });
+  }
 
   function renderAuth(state, payload) {
     var box = $('#auth-state');
+    stopPolling();
+
     if (state === 'waiting') {
       box.innerHTML =
         '<div class="waiting"><i></i>' +
           '<p class="t-body">' + T('auth.waitBody') + '</p></div>' +
-        '<div class="code">' + T('auth.code', { code: payload }) + '</div>' +
         '<button class="btn" id="auth-open">' + T('auth.openTelegram') + '</button>' +
-        '<button class="btn btn--ghost" id="auth-again">' + T('auth.resend') + '</button>' +
         '<button class="btn btn--ghost" id="auth-cancel">' + T('auth.cancel') + '</button>';
-      $('#auth-again').addEventListener('click', startAuth);
+      $('#auth-open').addEventListener('click', function () {
+        window.open(payload.deep_link, '_blank', 'noopener');
+      });
       $('#auth-cancel').addEventListener('click', function () { renderAuth('start'); });
+      pollTelegram(payload.token);
       return;
     }
+
+    if (state === 'email') {
+      box.innerHTML =
+        '<label class="field"><span>' + T('auth.email') + '</span>' +
+          '<input id="auth-email" type="email" inputmode="email" autocomplete="email" ' +
+          'placeholder="' + T('auth.emailPh') + '"></label>' +
+        '<button class="btn" id="auth-send">' + T('auth.sendCode') + '</button>' +
+        '<p class="t-small" id="auth-msg"></p>' +
+        '<button class="btn btn--ghost" id="auth-cancel">' + T('auth.cancel') + '</button>';
+      $('#auth-cancel').addEventListener('click', function () { renderAuth('start'); });
+      $('#auth-send').addEventListener('click', function () {
+        var address = $('#auth-email').value.trim();
+        if (!address) return;
+        $('#auth-send').disabled = true;
+        $('#auth-msg').textContent = T('auth.sending');
+        window.PMAuth.emailStart(address)
+          .then(function () { renderAuth('code', address); })
+          .catch(function (e) {
+            $('#auth-send').disabled = false;
+            $('#auth-msg').textContent = e.message || T('auth.errBody');
+          });
+      });
+      return;
+    }
+
+    if (state === 'code') {
+      box.innerHTML =
+        '<p class="t-body">' + T('auth.codeSent', { email: payload }) + '</p>' +
+        '<label class="field"><span>' + T('auth.code6') + '</span>' +
+          '<input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" ' +
+          'maxlength="6" placeholder="------"></label>' +
+        '<button class="btn" id="auth-verify">' + T('auth.verify') + '</button>' +
+        '<p class="t-small" id="auth-msg"></p>' +
+        '<button class="btn btn--ghost" id="auth-cancel">' + T('auth.cancel') + '</button>';
+      $('#auth-cancel').addEventListener('click', function () { renderAuth('start'); });
+      $('#auth-verify').addEventListener('click', function () {
+        var code = $('#auth-code').value.replace(/\D/g, '');
+        if (code.length !== 6) return;
+        $('#auth-verify').disabled = true;
+        $('#auth-msg').textContent = T('auth.checking');
+        window.PMAuth.emailVerify(payload, code)
+          .then(authDone)
+          .catch(function (e) {
+            $('#auth-verify').disabled = false;
+            $('#auth-msg').textContent = e.message || T('auth.errBody');
+          });
+      });
+      return;
+    }
+
     if (state === 'error') {
       box.innerHTML =
         '<div class="card"><h4>' + T('auth.errTitle') + '</h4>' +
-          '<p class="t-small">' + T('auth.errBody') + '</p></div>' +
+          '<p class="t-small">' + (payload || T('auth.errBody')) + '</p></div>' +
         '<button class="btn" id="auth-start">' + T('auth.retry') + '</button>';
-      $('#auth-start').addEventListener('click', startAuth);
+      $('#auth-start').addEventListener('click', function () { renderAuth('start'); });
       return;
     }
-    // The hero above already carries auth.h / auth.why — the start state is
-    // only the button, so the reason is not stated twice.
-    box.innerHTML = '<button class="btn" id="auth-start">' + T('auth.start') + '</button>';
-    $('#auth-start').addEventListener('click', startAuth);
+
+    // The hero above already carries auth.h / auth.why, so the chooser is
+    // only the buttons and the reason is not stated twice.
+    box.innerHTML = '<p class="t-small">' + T('auth.checking') + '</p>';
+    window.PMAuth.me().then(function (info) {
+      var m = info.methods || {};
+      var html = '';
+      if (m.telegram) html += '<button class="btn" id="auth-tg">' + T('auth.start') + '</button>';
+      if (m.email) html += '<button class="btn btn--ghost" id="auth-em">' + T('auth.withEmail') + '</button>';
+      if (!html) html = '<div class="card"><p class="t-small">' + T('auth.noMethod') + '</p></div>';
+      box.innerHTML = html + '<p class="t-small">' + T('gate.free') + '</p>';
+      if (m.telegram) $('#auth-tg').addEventListener('click', startTelegram);
+      if (m.email) $('#auth-em').addEventListener('click', function () { renderAuth('email'); });
+    }).catch(function () { renderAuth('error'); });
   }
 
-  var authTimer = null;
-  function startAuth() {
-    var code = String(Math.floor(100000 + Math.random() * 900000));
-    renderAuth('waiting', window.PMI18n.digits(code));
-    clearTimeout(authTimer);
-    // Mock: the real flow polls until the bot reports the code was used.
-    authTimer = setTimeout(function () {
-      account.save({ name: T('account.guest'), telegram: '@physicsme' })
-        .then(function () { showAccount(); });
-    }, 2600);
+  function startTelegram() {
+    $('#auth-state').innerHTML = '<p class="t-small">' + T('auth.checking') + '</p>';
+    window.PMAuth.tgStart()
+      .then(function (res) {
+        renderAuth('waiting', res);
+        // Opening straight away is what the tap meant; the button in the
+        // waiting state is there for when the popup was blocked.
+        window.open(res.deep_link, '_blank', 'noopener');
+      })
+      .catch(function (e) { renderAuth('error', e.message); });
+  }
+
+  /* The bot tells the server, not the app. Three seconds is the gap between
+     "did it work?" and hammering an endpoint; the token dies after fifteen
+     minutes and so does this. */
+  function pollTelegram(tok) {
+    var until = Date.now() + 15 * 60 * 1000;
+    authPoll = setInterval(function () {
+      if (Date.now() > until) { renderAuth('error'); return; }
+      window.PMAuth.tgPoll(tok)
+        .then(function (res) { if (res.status === 'ready') authDone(res); })
+        .catch(function (e) { if (e.status === 410) renderAuth('error'); });
+    }, 3000);
   }
 
   /* ---- account ---- */
@@ -793,9 +924,7 @@
         // no sign-in yet — putting it only in the signed-in branch would
         // make it unreachable for everyone.
         prow(T('saved.title'), T('saved.sub'));
-      $('#acc-login').addEventListener('click', function () {
-        openPage('s-auth', function () { renderAuth('start'); });
-      });
+      $('#acc-login').addEventListener('click', showAuth);
       box.querySelector('.prow').addEventListener('click', showSaved);
       return;
     }

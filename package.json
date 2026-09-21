@@ -11,7 +11,7 @@
   "scripts": {
     "serve": "python3 -m http.server 8788 --bind 127.0.0.1",
     "serve:lan": "python3 -m http.server 8788 --bind 0.0.0.0",
-    "test": "node test/smoke.js && node test/pwa.js && node test/offline.js && node tools/keycheck.js",
+    "test": "node test/smoke.js && node test/pwa.js && node test/offline.js && node test/auth.js && node tools/keycheck.js",
     "test:smoke": "node test/smoke.js",
     "test:pwa": "node test/pwa.js",
     "test:offline": "node test/offline.js",

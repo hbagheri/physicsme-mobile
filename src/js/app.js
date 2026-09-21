@@ -798,13 +798,34 @@
     stopPolling();
 
     if (state === 'waiting') {
+      /* The deep link is a shortcut, not the mechanism. Inside a Capacitor
+         webview the hand-off to Telegram frequently does not happen, and a
+         user staring at a spinner has nothing left to try. So the code is
+         spelled out and the bot name is selectable text: worst case the
+         person opens Telegram themselves, searches the name and types six
+         characters. That path never fails. */
+      var bot = payload.bot ? '@' + payload.bot : '';
       box.innerHTML =
-        '<div class="waiting"><i></i>' +
-          '<p class="t-body">' + T('auth.waitBody') + '</p></div>' +
-        '<button class="btn" id="auth-open">' + T('auth.openTelegram') + '</button>' +
+        '<ol class="steps">' +
+          '<li><span class="steps-n">۱</span><div>' +
+            '<p class="t-body">' + T('auth.step1', { bot: bot }) + '</p>' +
+            '<button class="btn btn--ghost btn--sm" id="auth-open">' + T('auth.openTelegram') + '</button>' +
+          '</div></li>' +
+          '<li><span class="steps-n">۲</span><div>' +
+            '<p class="t-body">' + T('auth.step2') + '</p>' +
+            '<div class="codebox"><code id="auth-code-val">' + payload.code + '</code>' +
+              '<button class="btn btn--ghost btn--sm" id="auth-copy">' + T('auth.copy') + '</button></div>' +
+          '</div></li>' +
+          '<li><span class="steps-n">۳</span><div>' +
+            '<p class="t-body">' + T('auth.step3') + '</p>' +
+            '<div class="waiting"><i></i><p class="t-small">' + T('auth.waitBody') + '</p></div>' +
+          '</div></li>' +
+        '</ol>' +
         '<button class="btn btn--ghost" id="auth-cancel">' + T('auth.cancel') + '</button>';
-      $('#auth-open').addEventListener('click', function () {
-        window.open(payload.deep_link, '_blank', 'noopener');
+
+      $('#auth-open').addEventListener('click', function () { openTelegram(payload); });
+      $('#auth-copy').addEventListener('click', function () {
+        copyText(payload.code, $('#auth-copy'));
       });
       $('#auth-cancel').addEventListener('click', function () { renderAuth('start'); });
       pollTelegram(payload.token);
@@ -889,11 +910,46 @@
     window.PMAuth.tgStart()
       .then(function (res) {
         renderAuth('waiting', res);
-        // Opening straight away is what the tap meant; the button in the
-        // waiting state is there for when the popup was blocked.
-        window.open(res.deep_link, '_blank', 'noopener');
+        openTelegram(res);
       })
       .catch(function (e) { renderAuth('error', e.message); });
+  }
+
+  /* tg:// reaches the installed app directly, which is the only thing that
+     reliably leaves a Capacitor webview. The https fallback runs half a
+     second later and only if we are still on screen — if Telegram came up,
+     the page is hidden by then and a browser tab behind it would be litter. */
+  function openTelegram(p) {
+    if (!p.bot) { window.open(p.deep_link, '_blank', 'noopener'); return; }
+    try { window.location.href = 'tg://resolve?domain=' + p.bot + '&start=' + p.code; } catch (e) {}
+    setTimeout(function () {
+      if (document.visibilityState === 'visible') window.open(p.deep_link, '_blank', 'noopener');
+    }, 700);
+  }
+
+  function copyText(text, btn) {
+    var done = function () {
+      var was = btn.textContent;
+      btn.textContent = T('auth.copied');
+      setTimeout(function () { btn.textContent = was; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text, done); });
+    } else {
+      legacyCopy(text, done);
+    }
+  }
+
+  function legacyCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
   }
 
   /* The bot tells the server, not the app. Three seconds is the gap between
@@ -1068,7 +1124,7 @@
     else document.documentElement.setAttribute('data-theme', v);
   }
 
-  var VERSION = '0.3.0';
+  var VERSION = '0.3.1';
 
   function showSettings() { openPage('s-settings', drawSettings); }
 

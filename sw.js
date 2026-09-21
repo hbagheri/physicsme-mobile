@@ -7,7 +7,7 @@
    cache fallback, which is the honest trade for a reading app.
    ===================================================================== */
 
-var VERSION = 'v8';
+var VERSION = 'v9';
 var SHELL = 'shell-' + VERSION;
 
 // Articles the reader chose to keep. Written by the page, never by this

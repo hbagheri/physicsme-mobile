@@ -631,6 +631,33 @@ button, .topbar, .orb-grid, .banner { user-select: none; -webkit-user-select: no
 @keyframes spin { to { transform: rotate(360deg); } }
 .code { font-family: var(--font-family-mono); font-size: var(--font-h2-size); letter-spacing: .28em; text-align: center; color: var(--color-text-title); direction: ltr; }
 
+/* sign-up: the three steps, and the code the user carries to the bot */
+.steps { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+.steps li { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }
+.steps li > div { flex: 1 1 auto; min-width: 0; }
+.steps-n {
+  flex: 0 0 auto;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-primary-subtle); color: var(--color-primary-default);
+  font-size: var(--font-label-size);
+}
+.steps .waiting { margin-bottom: 0; }
+.codebox {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  margin-top: var(--space-2); padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-default); border-radius: var(--radius-md);
+  background: var(--color-surface-card);
+}
+/* The code is the one thing on this screen the user has to read character by
+   character, so it gets the mono face and room between the letters. */
+.codebox code {
+  font-family: var(--font-family-mono); font-size: var(--font-h2-size);
+  letter-spacing: .22em; color: var(--color-text-title); direction: ltr;
+  user-select: all; -webkit-user-select: all;
+}
+.btn--sm { padding: var(--space-1) var(--space-3); font-size: var(--font-label-size); width: auto; }
+
 /* =====================================================================
    Onboarding — three pages, skippable, first run only
    ===================================================================== */

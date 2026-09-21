@@ -81,9 +81,11 @@ if (me.methods && me.methods.telegram) {
   const tgRes = await fetch(API + '/auth/tg/start', { method: 'POST' });
   const tg = await tgRes.json().catch(() => ({}));
   tgToken = tg.token || '';
-  check('5. /auth/tg/start returns a t.me deep link and a 48-char token',
+  // The code is read off this screen and typed into Telegram, so the shape
+  // matters: six characters, no 0/O and no 1/I/L.
+  check('5. /auth/tg/start returns a t.me deep link, a bot name and a typeable code',
         tgRes.status === 200 && /^https:\/\/t\.me\/.+\?start=/.test(tg.deep_link || '') &&
-        /^[0-9a-f]{48}$/.test(tgToken),
+        !!tg.bot && /^[2-9A-HJKMNP-Z]{6}$/.test(tgToken) && tg.code === tgToken,
         JSON.stringify(tg).slice(0, 160));
 } else {
   check('5. /auth/tg/start returns a t.me deep link', false, 'Telegram method reported unavailable');

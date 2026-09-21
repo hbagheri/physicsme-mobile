@@ -200,8 +200,24 @@ window.PMChat = (function () {
     abort: null,
     filter: '',
     draftCite: null,
+    draftQuote: null,
     onClose: null
   };
+
+  // A paragraph the reader pointed at is sent with the question, but not whole:
+  // a long one pushes the question itself out of the model's attention and the
+  // answer comes back as a summary of the excerpt instead of a reply. Cut at the
+  // last sentence break before the cap so the excerpt still ends somewhere.
+  var QUOTE_MAX = 900;
+
+  function clipQuote(text) {
+    text = String(text || '').replace(/\s+/g, ' ').trim();
+    if (text.length <= QUOTE_MAX) return text;
+    var cut = text.slice(0, QUOTE_MAX);
+    var stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('۔'), cut.lastIndexOf('؟'), cut.lastIndexOf('!'));
+    return (stop > QUOTE_MAX * 0.5 ? cut.slice(0, stop + 1) : cut) + ' …';
+  }
+
 
   var faNum = window.PMI18n.num;
   function $(s) { return document.querySelector(s); }
@@ -295,7 +311,15 @@ window.PMChat = (function () {
 
     var bubble = document.createElement('div');
     bubble.className = 'bubble' + (m.streaming ? ' typing' : '');
-    if (m.role === 'user') bubble.textContent = m.message;
+    if (m.role === 'user') {
+      if (m.quote) {
+        var q = document.createElement('div');
+        q.className = 'bubble-quote';
+        q.textContent = m.quote;
+        bubble.appendChild(q);
+      }
+      bubble.appendChild(document.createTextNode(m.message));
+    }
     else if (m.error) bubble.textContent = '⚠️ ' + m.message;
     else renderAnswer(bubble, m.message);
     wrap.appendChild(bubble);
@@ -415,7 +439,9 @@ window.PMChat = (function () {
     var text = box.value.trim();
     if (!text || S.streaming) return;
 
-    S.active.msgs.push({ role: 'user', message: text });
+    var mine = { role: 'user', message: text };
+    if (S.draftQuote) mine.quote = S.draftQuote;
+    S.active.msgs.push(mine);
     if (!S.active.title) {
       S.active.title = text.length > 70 ? text.slice(0, 70) : text;
       S.active.topic = topicOf(text);
@@ -424,6 +450,7 @@ window.PMChat = (function () {
     box.value = '';
     $('#chat-draft').innerHTML = '';
     S.draftCite = null;
+    S.draftQuote = null;
     autogrow();
 
     var answer = { role: 'assistant', message: '', streaming: true, rating: 0 };
@@ -440,6 +467,12 @@ window.PMChat = (function () {
     api.stream(
       {
         message: text,
+        // The excerpt rides beside the question, never inside it. Glued in, it
+        // becomes the site-search query and the science-gate input, and a wall of
+        // prose ruins both. It is resent every turn of this conversation so that
+        // "ساده‌تر بگو" still knows what it is about.
+        passage: S.active.passage || '',
+        passage_title: S.active.passageTitle || '',
         // history is kept client-side and resent whole; the server keeps the
         // last 20 turns and never reads history from the database
         history: S.active.msgs.filter(m => !m.streaming && !m.error)
@@ -508,7 +541,11 @@ window.PMChat = (function () {
     S.active.msgs.pop();
     var prev = S.active.msgs.pop();          // the user message that failed
     renderMessages();
-    if (prev) { $('#chat-composer').value = prev.message; autogrow(); send(); }
+    if (prev) {
+      S.draftQuote = prev.quote || null;
+      $('#chat-composer').value = prev.message;
+      autogrow(); send();
+    }
   }
 
   /* ===================================================================
@@ -762,12 +799,22 @@ window.PMChat = (function () {
 
     $('#chat-draft').innerHTML = '';
     S.draftCite = opts.cite || null;
+    S.draftQuote = opts.quote ? clipQuote(opts.quote) : null;
+    // Kept on the conversation, not the turn: every follow-up in this chat is
+    // still about the same paragraph.
+    if (S.draftQuote) { chat.passage = S.draftQuote; chat.passageTitle = opts.source || ''; }
     $('#chat-composer').value = opts.draft || '';
     if (S.draftCite) {
       var tag = document.createElement('span');
       tag.className = 'draft-tag';
       tag.textContent = S.draftCite;
       $('#chat-draft').appendChild(tag);
+    }
+    if (S.draftQuote) {
+      var qd = document.createElement('div');
+      qd.className = 'draft-quote';
+      qd.textContent = S.draftQuote;
+      $('#chat-draft').appendChild(qd);
     }
     autogrow();
 

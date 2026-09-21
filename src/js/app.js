@@ -523,7 +523,14 @@
       wrap.querySelector('.ask').addEventListener('click', function () {
         document.querySelectorAll('.para').forEach(function (p) { p.classList.remove('is-asked'); });
         wrap.classList.add('is-asked');
-        openSheet('para', { n: n, articleId: frame.id, paragraphId: b.id });
+        openSheet('para', {
+          n: n, articleId: frame.id, paragraphId: b.id,
+          // The question is "explain this paragraph", so the paragraph has to
+          // travel with it. The rendered text, not b.html — markup would just
+          // be tokens the model has to spend attention discarding.
+          text: wrap.querySelector('p').textContent.trim(),
+          article: doc.title
+        });
       });
       inner.appendChild(wrap);
     });
@@ -685,7 +692,9 @@
     openChat({
       newChat: true,
       draft: T('sheet.draftAsk'),
-      cite: T('sheet.citePara', { n: window.PMI18n.num(ctx.n || 0) })
+      cite: T('sheet.citePara', { n: window.PMI18n.num(ctx.n || 0) }),
+      quote: ctx.text || '',
+      source: ctx.article || ''
     });
   });
   $('#opt-tutor').addEventListener('click', function () {
@@ -1124,7 +1133,7 @@
     else document.documentElement.setAttribute('data-theme', v);
   }
 
-  var VERSION = '0.3.1';
+  var VERSION = '0.3.2';
 
   function showSettings() { openPage('s-settings', drawSettings); }
 

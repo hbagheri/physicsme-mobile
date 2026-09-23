@@ -276,6 +276,13 @@ window.PMI18n = (function () {
       'inbox.answer':        'جواب استاد',
       'inbox.openArticle':   'مقاله',
       'inbox.refresh':       'به‌روزرسانی',
+      'inbox.asked':         'پرسیدی {t}',
+      'inbox.answeredAt':    'جواب {t}',
+
+      'time.now':            'همین حالا',
+      'time.min':            '{n} دقیقه پیش',
+      'time.hour':           '{n} ساعت پیش',
+      'time.day':            '{n} روز پیش',
 
       'reader.video':        'تماشای ویدئو',
 
@@ -551,6 +558,13 @@ window.PMI18n = (function () {
       'inbox.answer':        'The teacher’s answer',
       'inbox.openArticle':   'Article',
       'inbox.refresh':       'Refresh',
+      'inbox.asked':         'asked {t}',
+      'inbox.answeredAt':    'answered {t}',
+
+      'time.now':            'just now',
+      'time.min':            '{n} min ago',
+      'time.hour':           '{n} h ago',
+      'time.day':            '{n} d ago',
 
       'reader.video':        'Watch the video',
 

@@ -127,6 +127,20 @@
       .replace(/"/g, '&quot;');
   }
 
+  /* How long ago, in the coarsest unit that still says something. Past a
+     month "forty-three days ago" stops being an answer, so it becomes a date —
+     and in Persian a Jalali one, which is the calendar the reader thinks in. */
+  function ago(iso) {
+    var t = Date.parse(iso || '');
+    if (!t) return '';
+    var mins = Math.floor((Date.now() - t) / 60000);
+    if (mins < 1)    return T('time.now');
+    if (mins < 60)   return T('time.min',  { n: window.PMI18n.num(mins) });
+    if (mins < 1440) return T('time.hour', { n: window.PMI18n.num(Math.floor(mins / 60)) });
+    if (mins < 43200) return T('time.day', { n: window.PMI18n.num(Math.floor(mins / 1440)) });
+    return new Date(t).toLocaleDateString(window.PMI18n.lang === 'fa' ? 'fa-IR' : 'en-GB');
+  }
+
   /* One fetch per list, kept for the life of the session. Navigation is
      back-and-forth by nature, and the site's content does not move
      while someone is reading it. */
@@ -1258,9 +1272,12 @@
         '<h4>' + (q.answered ? T('inbox.answered') : T('inbox.waiting')) +
           (q.unread ? ' <span class="qnew">' + T('inbox.new') + '</span>' : '') + '</h4>' +
         '<p class="qq">' + esc(q.question) + '</p>' +
+        '<p class="qwhen">' + T('inbox.asked', { t: ago(q.askedAt) }) + '</p>' +
         (q.passage ? '<blockquote class="qquote">' + esc(q.passage) + '</blockquote>' : '') +
         (q.answered
-          ? '<div class="qa"><span class="qa-h">' + T('inbox.answer') + '</span>' +
+          ? '<div class="qa"><span class="qa-h">' + T('inbox.answer') +
+                '<span class="qa-when">' + T('inbox.answeredAt', { t: ago(q.answeredAt) }) + '</span>' +
+              '</span>' +
               '<p>' + esc(q.answer) + '</p></div>'
           : '') +
         (q.slug ? '<button class="btn btn--ghost qopen">' + T('inbox.openArticle') +

@@ -604,9 +604,17 @@ button, .topbar, .orb-grid, .banner { user-select: none; -webkit-user-select: no
   background: var(--color-primary-subtle);
 }
 .qa-h {
-  display: block; margin-bottom: var(--space-1);
+  display: flex; justify-content: space-between; gap: var(--space-2);
+  margin-bottom: var(--space-1);
   font-size: var(--font-label-size); font-weight: 600;
   color: var(--color-primary-default);
+}
+.qa-when { font-weight: 400; color: var(--color-text-muted); }
+
+/* Waiting is the normal state here, so the card says how long it has been. */
+.qwhen {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+  font-size: var(--font-label-size); color: var(--color-text-muted);
 }
 .qa p { margin: 0; font-size: var(--font-small-size); line-height: var(--font-small-lh); color: var(--color-text-body); white-space: pre-wrap; }
 .qcard .qopen { margin-top: var(--space-3); }

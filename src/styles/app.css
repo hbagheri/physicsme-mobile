@@ -559,6 +559,58 @@ button, .topbar, .orb-grid, .banner { user-select: none; -webkit-user-select: no
 }
 .srow-del:hover { color: var(--color-danger); }
 
+/* ask a teacher — the compose box and the answers */
+.field textarea {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-background);
+  color: var(--color-text-title);
+  font-family: inherit; font-size: var(--font-small-size); line-height: 1.9;
+  resize: vertical;
+}
+.field textarea:focus { outline: none; border-color: var(--color-border-focus); background: var(--color-surface-card); }
+
+.qquote {
+  margin: 0;
+  padding-inline-start: var(--space-3);
+  border-inline-start: 3px solid var(--color-border-default);
+  font-size: var(--font-label-size); line-height: 1.9;
+  color: var(--color-text-muted);
+}
+/* A paragraph can be most of a screen. On the compose page it must not push
+   the box you came here to type in below the fold. */
+#ask-body .qquote { max-height: 8.5em; overflow-y: auto; }
+
+.qcard.is-new { border-color: var(--color-primary-hover); }
+.qnew {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-default);
+  font-size: var(--font-label-size); font-weight: 600; letter-spacing: 0;
+}
+.qq {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-small-size); line-height: var(--font-small-lh);
+  color: var(--color-text-title);
+}
+.qa {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-subtle);
+}
+.qa-h {
+  display: block; margin-bottom: var(--space-1);
+  font-size: var(--font-label-size); font-weight: 600;
+  color: var(--color-primary-default);
+}
+.qa p { margin: 0; font-size: var(--font-small-size); line-height: var(--font-small-lh); color: var(--color-text-body); white-space: pre-wrap; }
+.qcard .qopen { margin-top: var(--space-3); }
+
 /* segmented control — language and theme */
 .seg {
   display: flex;

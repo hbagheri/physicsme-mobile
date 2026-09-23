@@ -221,11 +221,13 @@ await page.waitForTimeout(500);
 await page.click('#orb-account');
 await page.waitForTimeout(300);
 await shot('11-account');
-await page.locator('#account-body .prow').nth(0).click();
+// Row 0 is «پرسش‌های من», which needs a credential this run deliberately
+// does not have — see the note above. Usage and settings are rows 1 and 2.
+await page.locator('#account-body .prow').nth(1).click();
 await page.waitForTimeout(300);
 await shot('12-usage');
 await page.click('#s-usage [data-page-back]');
-await page.locator('#account-body .prow').nth(1).click();
+await page.locator('#account-body .prow').nth(2).click();
 await page.waitForTimeout(300);
 await shot('13-settings');
 await page.click('#set-theme button[data-v="dark"]');

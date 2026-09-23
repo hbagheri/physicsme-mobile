@@ -473,6 +473,7 @@ window.PMChat = (function () {
         // "ساده‌تر بگو" still knows what it is about.
         passage: S.active.passage || '',
         passage_title: S.active.passageTitle || '',
+        passage_article: S.active.passageArticle || '',
         // history is kept client-side and resent whole; the server keeps the
         // last 20 turns and never reads history from the database
         history: S.active.msgs.filter(m => !m.streaming && !m.error)
@@ -802,7 +803,11 @@ window.PMChat = (function () {
     S.draftQuote = opts.quote ? clipQuote(opts.quote) : null;
     // Kept on the conversation, not the turn: every follow-up in this chat is
     // still about the same paragraph.
-    if (S.draftQuote) { chat.passage = S.draftQuote; chat.passageTitle = opts.source || ''; }
+    if (S.draftQuote) {
+      chat.passage = S.draftQuote;
+      chat.passageTitle = opts.source || '';
+      chat.passageArticle = opts.articleSlug || '';
+    }
     $('#chat-composer').value = opts.draft || '';
     if (S.draftCite) {
       var tag = document.createElement('span');

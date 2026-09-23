@@ -91,6 +91,42 @@
       });
   }
 
+  /* The signed-in endpoints. Unlike content, these carry the device header
+     and surface the server's own error code, because "you have asked five
+     today" and "you are not signed in" call for different screens.
+     `/questions` answers 202, not 200 — the edge caches 200 by URL alone
+     and would hand one reader's inbox to the next. */
+  function authed(path, init) {
+    return fetch(API + path, init).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (r.ok) return j;
+        var e = new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+        e.status = r.status;
+        e.code = (j.error && j.error.code) || '';
+        throw e;
+      });
+    });
+  }
+
+  function getAuthed(path) {
+    return authed(path, { headers: window.PMAuth.headers({ Accept: 'application/json' }) });
+  }
+
+  function postJSON(path, body) {
+    return authed(path, {
+      method: 'POST',
+      headers: window.PMAuth.headers({ 'Content-Type': 'application/json', Accept: 'application/json' }),
+      body: JSON.stringify(body || {})
+    });
+  }
+
+  /* Question and answer are typed by people and drawn with innerHTML. */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   /* One fetch per list, kept for the life of the session. Navigation is
      back-and-forth by nature, and the site's content does not move
      while someone is reading it. */
@@ -306,10 +342,24 @@
       return Promise.resolve(null);
     },
 
+    /* A question for a human. The passage travels with it because "explain
+       this" is meaningless without the this; the slug travels because the
+       teacher reads the question in Telegram, away from the app, and needs
+       to know which article it came from. */
     ask: function (payload) {
-      // payload = { paragraphId, articleId, target: 'ai' | 'tutor', text }
-      console.log('ask →', payload);
-      return Promise.resolve({ ok: true });
+      return postJSON('/ask', {
+        question: payload.question || '',
+        passage:  payload.text || '',
+        article:  payload.articleId || ''
+      });
+    },
+
+    questions: function () { return getAuthed('/questions'); },
+
+    /* Fire-and-forget: a badge that clears one visit late is not worth a
+       spinner, and the row is already on screen. */
+    seen: function (id) {
+      return postJSON('/questions/' + id + '/seen', {}).catch(function () {});
     }
   };
 
@@ -694,11 +744,19 @@
       draft: T('sheet.draftAsk'),
       cite: T('sheet.citePara', { n: window.PMI18n.num(ctx.n || 0) }),
       quote: ctx.text || '',
-      source: ctx.article || ''
+      source: ctx.article || '',
+      // The slug, so the server can put the paragraph back in its article
+      // instead of answering about an isolated fragment.
+      articleSlug: ctx.articleId || ''
     });
   });
   $('#opt-tutor').addEventListener('click', function () {
-    api.ask(Object.assign({ target: 'tutor' }, pendingAsk || {})).then(closeSheet);
+    var ctx = pendingAsk || {};
+    closeSheet();
+    // The question lands in a queue tied to an account; without one there
+    // is nowhere to send the answer back to.
+    if (!window.PMAuth.isMember()) { showAuth(); return; }
+    showAsk(ctx);
   });
   document.querySelectorAll('[data-open-ai]').forEach(function (b) {
     b.addEventListener('click', function () { openChat({ newChat: false }); });
@@ -749,8 +807,10 @@
     logout: function () {
       try { localStorage.removeItem('pm-user'); } catch (e) {}
       window.PMAuth.clear();
-      // Articles read as a member must not stay readable after signing out.
+      // Articles read as a member must not stay readable after signing out,
+      // and neither must the questions that member asked.
       cache = {};
+      inboxCache = null;
       return Promise.resolve();
     },
     // App Store rules require this to really delete, not hide. The endpoint
@@ -1003,6 +1063,8 @@
       '<label class="field"><span>' + T('account.name') + '</span>' +
         '<input id="acc-name" placeholder="' + T('account.namePh') + '" value="' + (u.name || '') + '"></label>' +
       '<button class="btn" id="acc-save">' + T('account.save') + '</button>' +
+      '<div id="acc-uname-box"></div>' +
+      prow(T('inbox.title'), T('inbox.sub')) +
       prow(T('account.usage'), T('account.usageSub')) +
       prow(T('account.settings'), T('account.settingsSub')) +
       prow(T('saved.title'), T('saved.sub')) +
@@ -1022,19 +1084,57 @@
       u.name = $('#acc-name').value.trim() || u.name;
       account.save(u).then(function () { e.target.textContent = T('account.saved'); });
     });
-    rows[0].addEventListener('click', showUsage);
-    rows[1].addEventListener('click', showSettings);
-    rows[2].addEventListener('click', showSaved);
+    rows[0].addEventListener('click', showInbox);
+    rows[1].addEventListener('click', showUsage);
+    rows[2].addEventListener('click', showSettings);
+    rows[3].addEventListener('click', showSaved);
     $('#acc-out').addEventListener('click', function () {
       account.logout().then(function () { drawAccount(null); });
     });
-    rows[3].addEventListener('click', function () { $('#acc-confirm').hidden = false; });
+    rows[4].addEventListener('click', function () { $('#acc-confirm').hidden = false; });
     $('#acc-confirm').querySelector('.no').addEventListener('click', function () {
       $('#acc-confirm').hidden = true;
     });
     $('#acc-confirm').querySelector('.yes').addEventListener('click', function () {
       account.destroy().then(function () { drawAccount(null); });
     });
+
+    drawUsername();
+  }
+
+  /* The login lives on the server, not in the local account record, so it is
+     filled in after the rest of the screen rather than held up by a request. */
+  function drawUsername() {
+    var box = $('#acc-uname-box');
+    if (!box || !window.PMAuth.isMember()) return;
+
+    window.PMAuth.me().then(function (info) {
+      if (!info.login) return;
+      box.innerHTML =
+        '<label class="field"><span>' + T('account.uname') + '</span>' +
+          '<input id="acc-uname" autocapitalize="none" autocorrect="off" spellcheck="false" ' +
+          'placeholder="' + T('account.unamePh') + '" value="' + info.login + '"></label>' +
+        '<p class="t-small" id="acc-uname-msg">' +
+          T(info.auto ? 'account.unameAuto' : 'account.unameHint') + '</p>' +
+        '<button class="btn btn--ghost" id="acc-uname-save">' + T('account.unameSave') + '</button>';
+
+      $('#acc-uname-save').addEventListener('click', function () {
+        var name = $('#acc-uname').value.trim();
+        if (!name || name === info.login) return;
+        $('#acc-uname-save').disabled = true;
+        window.PMAuth.setUsername(name)
+          .then(function (res) {
+            info.login = res.username;
+            $('#acc-uname').value = res.username;
+            $('#acc-uname-msg').textContent = T('account.unameOk');
+            $('#acc-uname-save').disabled = false;
+          })
+          .catch(function (e) {
+            $('#acc-uname-msg').textContent = e.message || T('auth.errBody');
+            $('#acc-uname-save').disabled = false;
+          });
+      });
+    }).catch(function () {});
   }
 
   /* ---- offline library ---- */
@@ -1080,6 +1180,109 @@
     $('#saved-clear').addEventListener('click', function () {
       saved.clear().then(drawSaved);
     });
+  }
+
+  /* ---- ask a teacher ----
+     The other half of the paragraph sheet. The AI answers in the chat; this
+     one goes to a person, so it needs a written question rather than the
+     bare paragraph, and it needs to say out loud that the wait is hours. */
+
+  function showAsk(ctx) {
+    openPage('s-ask', function () {
+      $('#ask-body').innerHTML =
+        '<p class="note">' + T('ask.intro') + '</p>' +
+        (ctx.text
+          ? '<div class="card"><h4>' + T('ask.about') + '</h4>' +
+              '<blockquote class="qquote">' + esc(ctx.text) + '</blockquote></div>'
+          : '') +
+        '<label class="field"><span>' + T('ask.label') + '</span>' +
+          '<textarea id="ask-text" rows="5" placeholder="' + T('ask.ph') + '"></textarea></label>' +
+        '<p class="t-small" id="ask-msg"></p>' +
+        '<button class="btn" id="ask-send">' + T('ask.send') + '</button>';
+
+      var btn = $('#ask-send');
+      btn.addEventListener('click', function () {
+        var q = $('#ask-text').value.trim();
+        if (q.length < 5) { $('#ask-msg').textContent = T('ask.short'); return; }
+        btn.disabled = true;
+        $('#ask-msg').textContent = T('ask.sending');
+        api.ask({ question: q, text: ctx.text || '', articleId: ctx.articleId || '' })
+          .then(function () {
+            inboxCache = null;
+            $('#ask-body').innerHTML =
+              '<div class="card"><h4>' + T('ask.okTitle') + '</h4>' +
+                '<p>' + T('ask.okBody') + '</p>' +
+                '<button class="btn btn--ghost" id="ask-go">' + T('ask.okGo') + '</button></div>';
+            $('#ask-go').addEventListener('click', function () { pageBack(); showInbox(); });
+          })
+          .catch(function (e) {
+            $('#ask-msg').textContent = e.message || T('auth.errBody');
+            btn.disabled = false;
+          });
+      });
+      $('#ask-text').focus();
+    });
+  }
+
+  /* ---- the answers ----
+     One fetch per visit, not per render: marking a row seen re-renders, and
+     re-fetching there would race the write it just made. */
+  var inboxCache = null;
+
+  function showInbox() { openPage('s-inbox', loadInbox); }
+
+  function loadInbox() {
+    $('#inbox-body').innerHTML = '<p class="note">' + T('ask.sending') + '</p>';
+    api.questions()
+      .then(function (res) { inboxCache = res.items || []; drawInbox(); })
+      .catch(function (e) {
+        $('#inbox-body').innerHTML = '<div class="card"><h4>' + T('err.load') + '</h4>' +
+          '<p>' + esc(e.message || '') + '</p></div>' +
+          '<button class="btn btn--ghost" id="inbox-refresh">' + T('err.retry') + '</button>';
+        $('#inbox-refresh').addEventListener('click', loadInbox);
+      });
+  }
+
+  function drawInbox() {
+    var box = $('#inbox-body');
+    var list = inboxCache || [];
+
+    if (!list.length) {
+      box.innerHTML = '<div class="card"><h4>' + T('inbox.emptyTitle') + '</h4>' +
+        '<p class="t-small">' + T('inbox.emptyBody') + '</p></div>';
+      return;
+    }
+
+    box.innerHTML = list.map(function (q) {
+      return '<div class="card qcard' + (q.unread ? ' is-new' : '') + '">' +
+        '<h4>' + (q.answered ? T('inbox.answered') : T('inbox.waiting')) +
+          (q.unread ? ' <span class="qnew">' + T('inbox.new') + '</span>' : '') + '</h4>' +
+        '<p class="qq">' + esc(q.question) + '</p>' +
+        (q.passage ? '<blockquote class="qquote">' + esc(q.passage) + '</blockquote>' : '') +
+        (q.answered
+          ? '<div class="qa"><span class="qa-h">' + T('inbox.answer') + '</span>' +
+              '<p>' + esc(q.answer) + '</p></div>'
+          : '') +
+        (q.slug ? '<button class="btn btn--ghost qopen">' + T('inbox.openArticle') +
+                    ' — ' + esc(q.article) + '</button>' : '') +
+      '</div>';
+    }).join('') +
+    '<button class="btn btn--ghost" id="inbox-refresh">' + T('inbox.refresh') + '</button>';
+
+    box.querySelectorAll('.qcard').forEach(function (card, i) {
+      var q = list[i];
+      var go = card.querySelector('.qopen');
+      if (go) go.addEventListener('click', function () {
+        // The article is reached from the inbox, not from the content tree,
+        // so it opens as a root and Back returns here.
+        stack.length = 0;
+        open({ id: q.slug, kind: 'article', title: q.article, from: 'saved' });
+      });
+      // Read is read the moment it is on screen; the badge survives this
+      // render and is gone on the next visit.
+      if (q.unread) { api.seen(q.id); q.unread = false; }
+    });
+    $('#inbox-refresh').addEventListener('click', loadInbox);
   }
 
   /* ---- usage ---- */

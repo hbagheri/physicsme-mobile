@@ -70,10 +70,14 @@ check('3. chapter lists stay readable without an account', listRes.status === 20
 /* ---- 4. the sign-up surface is alive and honest about itself ---- */
 const meRes = await fetch(API + '/auth/me' + nocache());
 const me = await meRes.json().catch(() => ({}));
+// 202, not 200: the edge caches 200 by URL alone and would hand one caller's
+// answer to the next, so the endpoint answers with a status Cloudflare passes
+// through. Anything 2xx is a pass here.
 check('4. /auth/me reports member:false and the usable methods',
-      meRes.status === 200 && me.member === false && me.methods &&
-      typeof me.methods.telegram === 'boolean' && typeof me.methods.email === 'boolean',
-      JSON.stringify(me).slice(0, 160));
+      meRes.ok && me.member === false && me.login === '' && me.auto === false &&
+      me.methods && typeof me.methods.telegram === 'boolean' &&
+      typeof me.methods.email === 'boolean',
+      'HTTP ' + meRes.status + ' ' + JSON.stringify(me).slice(0, 160));
 
 /* ---- 5. Telegram start hands back a deep link, not an account ---- */
 let tgToken = '';

@@ -129,6 +129,17 @@ window.PMAuth = (function () {
     tgStart: function () { return post('/auth/tg/start'); },
     tgPoll: function (t) { return get('/auth/tg/poll?token=' + encodeURIComponent(t)); },
     emailStart: function (email) { return post('/auth/email/start', { email: email }); },
-    emailVerify: function (email, code) { return post('/auth/email/verify', { email: email, code: code }); }
+    emailVerify: function (email, code) { return post('/auth/email/verify', { email: email, code: code }); },
+
+    /* The stored credential is base64("<login>:<password>"), so renaming the
+       login invalidates it. The server issues a replacement in the same
+       response; swapping it here keeps the session alive. */
+    setUsername: function (name) {
+      return post('/auth/username', { username: name }).then(function (res) {
+        if (res.credential) setCredential(res.credential);
+        mePromise = null;
+        return res;
+      });
+    }
   };
 })();
